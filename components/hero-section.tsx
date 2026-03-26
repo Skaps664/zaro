@@ -61,7 +61,7 @@ export function HeroSection() {
         }}
       >
         <img
-          src="/zaru-hero-3.png"
+          src="/zaru-hero-2.png"
           alt="Luxury ZARU perfume bottles"
           className="w-full h-full object-cover animate-zoom-in"
         />
@@ -74,13 +74,21 @@ export function HeroSection() {
         <div className="max-w-2xl">
           {/* Text content */}
           <p className="reveal opacity-0 text-sm uppercase tracking-[0.2em] text-background font-medium mb-6">
-            Inspired by Icons
           </p>
-          <h1 className="font-serif text-4xl md:text-5xl lg:text-6xl xl:text-7xl font-medium leading-[1.1] text-background text-balance mb-8">
-            <AnimatedText text="Premium Fragrance" delay={0.2} />
-            <br />
-            <span className="text-accent">
-              <AnimatedText text="Perfected for You" delay={0.6} />
+          <h1 className="font-serif font-medium leading-[1.1] text-background mb-8">
+            <span className="block text-4xl md:hidden">
+              <span className="block whitespace-nowrap">Premium</span>
+              <span className="block whitespace-nowrap">Fragrance</span>
+              <span className="block text-accent whitespace-nowrap">Perfected</span>
+              <span className="block text-accent whitespace-nowrap">for You</span>
+            </span>
+
+            <span className="hidden md:block text-balance text-5xl lg:text-6xl xl:text-7xl">
+              <AnimatedText text="Premium Fragrance" delay={0.2} />
+              <br />
+              <span className="text-accent">
+                <AnimatedText text="Perfected for You" delay={0.6} />
+              </span>
             </span>
           </h1>
           <p className="reveal opacity-0 animation-delay-400 text-lg text-background/90 leading-relaxed mb-10 md:text-base mr-0 pr-0">
