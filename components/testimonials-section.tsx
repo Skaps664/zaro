@@ -1,6 +1,8 @@
 "use client"
 
 import { useEffect, useRef } from "react"
+import { Button } from "@/components/ui/button"
+import { ChevronLeft, ChevronRight, Play } from "lucide-react"
 import { ScrollBlurText } from "./scroll-blur-text"
 
 const testimonials = [
@@ -39,9 +41,48 @@ const testimonials = [
   },
 ]
 
+const videoReviews = [
+  {
+    id: 1,
+    name: "Ayaan",
+    duration: "0:42",
+    title: "Victory Crown Reaction",
+    thumbnail: "/images/fragrance-victory-crown.jpg",
+  },
+  {
+    id: 2,
+    name: "Lina",
+    duration: "0:55",
+    title: "Wild Storm First Wear",
+    thumbnail: "/images/fragrance-wild-storm.jpg",
+  },
+  {
+    id: 3,
+    name: "Ravi",
+    duration: "0:38",
+    title: "Blue Legacy Compliments",
+    thumbnail: "/images/fragrance-blue-legacy.jpg",
+  },
+  {
+    id: 4,
+    name: "Mariam",
+    duration: "1:03",
+    title: "Longevity Check",
+    thumbnail: "/images/mission-luxury-scent.jpg",
+  },
+  {
+    id: 5,
+    name: "Kabir",
+    duration: "0:47",
+    title: "Daily Rotation Pick",
+    thumbnail: "/images/hero-zaru.jpg",
+  },
+]
+
 export function TestimonialsSection() {
   const sectionRef = useRef<HTMLElement>(null)
   const scrollRef = useRef<HTMLDivElement>(null)
+  const videoScrollRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
     const observer = new IntersectionObserver(
@@ -101,6 +142,17 @@ export function TestimonialsSection() {
 
   const duplicatedTestimonials = [...testimonials, ...testimonials]
 
+  const scrollVideoCards = (direction: "left" | "right") => {
+    const container = videoScrollRef.current
+    if (!container) return
+
+    const amount = Math.round(container.clientWidth * 0.9)
+    container.scrollBy({
+      left: direction === "left" ? -amount : amount,
+      behavior: "smooth",
+    })
+  }
+
   return (
     <section ref={sectionRef} id="testimonials" className="py-24 bg-background overflow-hidden lg:py-32 lg:pb-0">
       {/* Section Header */}
@@ -139,6 +191,67 @@ export function TestimonialsSection() {
                 </div>
               </div>
             ))}
+          </div>
+        </div>
+
+        <div className="mt-16 px-6 lg:px-8">
+          <div className="reveal opacity-0 text-center mb-8">
+            <p className="text-sm uppercase tracking-[0.2em] text-secondary font-medium mb-3">Video Reviews</p>
+            <h3 className="font-serif text-2xl md:text-3xl text-foreground">See real customer moments</h3>
+          </div>
+
+          <div
+            ref={videoScrollRef}
+            className="flex gap-4 overflow-x-auto snap-x snap-mandatory scrollbar-hide lg:grid lg:grid-cols-5 lg:gap-5 lg:overflow-visible"
+          >
+            {videoReviews.map((review, index) => (
+              <article
+                key={review.id}
+                className={`reveal opacity-0 ${index === 1 ? "animation-delay-200" : index === 2 ? "animation-delay-400" : index === 3 ? "animation-delay-600" : index === 4 ? "animation-delay-800" : ""} min-w-[74vw] sm:min-w-[52vw] md:min-w-[36vw] lg:min-w-0 snap-center rounded-2xl border border-border/50 overflow-hidden bg-card shadow-lg shadow-primary/5 hover:shadow-xl hover:shadow-primary/10 transition-all duration-500 group`}
+              >
+                <div className="relative aspect-[9/16] overflow-hidden">
+                  <img
+                    src={review.thumbnail}
+                    alt={`${review.name} video review`}
+                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-foreground/50 via-transparent to-transparent" />
+                  <span className="absolute top-3 right-3 bg-background/90 text-foreground text-xs font-medium px-2 py-1 rounded-full">
+                    {review.duration}
+                  </span>
+                  <span className="absolute inset-0 flex items-center justify-center">
+                    <span className="w-12 h-12 rounded-full bg-background/85 text-foreground flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
+                      <Play className="w-5 h-5 ml-0.5" fill="currentColor" />
+                    </span>
+                  </span>
+                </div>
+                <div className="p-4">
+                  <p className="font-medium text-foreground text-sm mb-1">{review.title}</p>
+                  <p className="text-xs text-muted-foreground">by {review.name}</p>
+                </div>
+              </article>
+            ))}
+          </div>
+
+          <div className="mt-6 flex items-center justify-center gap-3 lg:hidden">
+            <Button
+              variant="outline"
+              size="icon"
+              className="rounded-full"
+              aria-label="Scroll video reviews left"
+              onClick={() => scrollVideoCards("left")}
+            >
+              <ChevronLeft className="w-4 h-4" />
+            </Button>
+            <Button
+              variant="outline"
+              size="icon"
+              className="rounded-full"
+              aria-label="Scroll video reviews right"
+              onClick={() => scrollVideoCards("right")}
+            >
+              <ChevronRight className="w-4 h-4" />
+            </Button>
           </div>
         </div>
       </div>

@@ -70,27 +70,6 @@ export function Header() {
                 Hero Picks
               </Link>
               <Link
-                href="/#accuracy"
-                className="text-lg text-muted-foreground hover:text-foreground transition-colors"
-                onClick={() => setIsOpen(false)}
-              >
-                Why ZARU
-              </Link>
-              <Link
-                href="/#testimonials"
-                className="text-lg text-muted-foreground hover:text-foreground transition-colors"
-                onClick={() => setIsOpen(false)}
-              >
-                Testimonials
-              </Link>
-              <Link
-                href="/#mission"
-                className="text-lg text-muted-foreground hover:text-foreground transition-colors"
-                onClick={() => setIsOpen(false)}
-              >
-                About Us
-              </Link>
-              <Link
                 href="/"
                 className="text-lg text-muted-foreground hover:text-foreground transition-colors flex items-center gap-3"
                 onClick={() => setIsOpen(false)}

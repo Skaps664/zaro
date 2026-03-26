@@ -61,7 +61,7 @@ export function HeroSection() {
         }}
       >
         <img
-          src="/zaru-hero-2.png"
+          src="/zaru-hero-3.png"
           alt="Luxury ZARU perfume bottles"
           className="w-full h-full object-cover animate-zoom-in"
         />
