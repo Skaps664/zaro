@@ -3,7 +3,7 @@
 import { useMemo, useState } from "react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
-import { ArrowLeft, CheckCircle2, Copy, MessageCircle } from "lucide-react"
+import { ArrowLeft, CheckCircle2, Copy, MessageCircle, Minus, Plus, Trash2 } from "lucide-react"
 import { toast } from "sonner"
 import { useCart } from "@/components/cart-provider"
 import { Button } from "@/components/ui/button"
@@ -36,7 +36,7 @@ const PAYMENT_DETAILS = {
 
 export function CheckoutPageContent() {
   const router = useRouter()
-  const { detailedItems, cartCount, totalAmount, clearCart } = useCart()
+  const { detailedItems, cartCount, totalAmount, clearCart, updateQuantity, removeItem } = useCart()
   const [fullName, setFullName] = useState("")
   const [phone, setPhone] = useState("")
   const [city, setCity] = useState("")
@@ -78,7 +78,7 @@ export function CheckoutPageContent() {
       return
     }
 
-    if (!fullName.trim() || !phone.trim() || !city.trim() || !address.trim()) {
+    if (!fullName.trim() || !phone.trim() || !city.trim() || !address.trim() || !email.trim()) {
       toast.error("Please fill all required checkout fields")
       return
     }
@@ -261,10 +261,12 @@ export function CheckoutPageContent() {
                 className="h-11 rounded-xl border border-border/70 bg-background px-3 text-sm"
               />
               <input
+                type="email"
                 value={email}
                 onChange={(event) => setEmail(event.target.value)}
-                placeholder="Email (optional)"
+                placeholder="Email *"
                 className="h-11 rounded-xl border border-border/70 bg-background px-3 text-sm"
+                required
               />
             </div>
 
@@ -275,45 +277,68 @@ export function CheckoutPageContent() {
               className="min-h-24 w-full rounded-xl border border-border/70 bg-background px-3 py-2 text-sm"
             />
 
-            <div className="grid gap-4 sm:grid-cols-2">
-              <select
-                value={paymentType}
-                onChange={(event) => {
-                  const nextType = event.target.value as "advance" | "cod"
-                  setPaymentType(nextType)
-                  if (nextType === "cod") {
+            <div className="space-y-3">
+              <p className="text-sm font-medium text-foreground">Payment Type</p>
+              <label
+                className={`flex items-start gap-3 rounded-2xl border p-3 transition-colors ${paymentType === "advance" ? "border-primary bg-primary/5" : "border-border/70"}`}
+              >
+                <input
+                  type="radio"
+                  name="paymentType"
+                  value="advance"
+                  checked={paymentType === "advance"}
+                  onChange={() => {
+                    setPaymentType("advance")
+                    setPaymentMethod("Bank Transfer")
+                  }}
+                  className="mt-1"
+                />
+                <span>
+                  <span className="block text-sm font-medium text-foreground">Advance Payment</span>
+                  <span className="block text-xs text-muted-foreground">Get 10% discount. Send proof on WhatsApp after payment.</span>
+                </span>
+              </label>
+
+              <label
+                className={`flex items-start gap-3 rounded-2xl border p-3 transition-colors ${paymentType === "cod" ? "border-primary bg-primary/5" : "border-border/70"}`}
+              >
+                <input
+                  type="radio"
+                  name="paymentType"
+                  value="cod"
+                  checked={paymentType === "cod"}
+                  onChange={() => {
+                    setPaymentType("cod")
                     setPaymentMethod("Cash on Delivery")
                     setPaymentReference("")
-                  } else {
-                    setPaymentMethod("Bank Transfer")
-                  }
-                }}
-                className="h-11 rounded-xl border border-border/70 bg-background px-3 text-sm"
-              >
-                <option value="advance">Advance Payment (10% Off)</option>
-                <option value="cod">Cash on Delivery</option>
-              </select>
-
-              <select
-                value={paymentMethod}
-                onChange={(event) => setPaymentMethod(event.target.value)}
-                className="h-11 rounded-xl border border-border/70 bg-background px-3 text-sm"
-                disabled={paymentType === "cod"}
-              >
-                <option>Bank Transfer</option>
-                <option>EasyPaisa</option>
-                <option>JazzCash</option>
-                {paymentType === "cod" && <option>Cash on Delivery</option>}
-              </select>
+                  }}
+                  className="mt-1"
+                />
+                <span>
+                  <span className="block text-sm font-medium text-foreground">Cash on Delivery</span>
+                  <span className="block text-xs text-muted-foreground">Pay when your parcel arrives. No discount applies.</span>
+                </span>
+              </label>
             </div>
 
             {paymentType === "advance" && (
-              <input
-                value={paymentReference}
-                onChange={(event) => setPaymentReference(event.target.value)}
-                placeholder="Transaction reference (optional)"
-                className="h-11 rounded-xl border border-border/70 bg-background px-3 text-sm"
-              />
+              <div className="grid gap-4 sm:grid-cols-2">
+                <select
+                  value={paymentMethod}
+                  onChange={(event) => setPaymentMethod(event.target.value)}
+                  className="h-11 rounded-xl border border-border/70 bg-background px-3 text-sm"
+                >
+                  <option>Bank Transfer</option>
+                  <option>EasyPaisa</option>
+                  <option>JazzCash</option>
+                </select>
+                <input
+                  value={paymentReference}
+                  onChange={(event) => setPaymentReference(event.target.value)}
+                  placeholder="Transaction reference (optional)"
+                  className="h-11 rounded-xl border border-border/70 bg-background px-3 text-sm"
+                />
+              </div>
             )}
 
             <textarea
@@ -333,9 +358,39 @@ export function CheckoutPageContent() {
               <h3 className="font-serif text-2xl text-foreground mb-4">Order Summary</h3>
               <div className="space-y-2 mb-4">
                 {orderItems.map((item) => (
-                  <div key={item.productId} className="flex justify-between gap-3 text-sm">
-                    <span className="text-muted-foreground">{item.name} x {item.quantity}</span>
-                    <span className="text-foreground">{formatCurrency(item.lineTotal)}</span>
+                  <div key={item.productId} className="rounded-xl border border-border/60 bg-background p-3">
+                    <div className="flex items-center justify-between gap-3 text-sm mb-2">
+                      <span className="text-muted-foreground">{item.name}</span>
+                      <span className="text-foreground">{formatCurrency(item.lineTotal)}</span>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <div className="inline-flex items-center gap-2 rounded-full border border-border/70 px-2 py-1">
+                        <button
+                          type="button"
+                          aria-label="Decrease quantity"
+                          onClick={() => updateQuantity(item.productId, item.quantity - 1)}
+                          className="h-7 w-7 rounded-full text-muted-foreground hover:bg-muted flex items-center justify-center"
+                        >
+                          <Minus className="h-3.5 w-3.5" />
+                        </button>
+                        <span className="text-sm min-w-5 text-center">{item.quantity}</span>
+                        <button
+                          type="button"
+                          aria-label="Increase quantity"
+                          onClick={() => updateQuantity(item.productId, item.quantity + 1)}
+                          className="h-7 w-7 rounded-full text-muted-foreground hover:bg-muted flex items-center justify-center"
+                        >
+                          <Plus className="h-3.5 w-3.5" />
+                        </button>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => removeItem(item.productId)}
+                        className="inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-destructive"
+                      >
+                        <Trash2 className="h-3.5 w-3.5" /> Remove
+                      </button>
+                    </div>
                   </div>
                 ))}
               </div>
@@ -359,7 +414,7 @@ export function CheckoutPageContent() {
             </div>
 
             <div className="rounded-3xl border border-border/60 bg-card p-6">
-              <h3 className="font-serif text-2xl text-foreground mb-4">Payment Details</h3>
+              <h3 className="font-serif text-2xl text-foreground mb-4">Payment Information</h3>
               {paymentType === "advance" ? (
                 <>
                   <div className="space-y-3 text-sm">

@@ -3,8 +3,7 @@ import { Footer } from "@/components/footer"
 import { ProductCard } from "@/components/product-card"
 import { getCatalogProducts, getSiteSettings } from "@/lib/storefront-data"
 
-export const dynamic = "force-dynamic"
-export const revalidate = 0
+export const revalidate = 120
 
 export default async function ProductsPage() {
   const [catalog, siteSettings] = await Promise.all([getCatalogProducts(), getSiteSettings()])

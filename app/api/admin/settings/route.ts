@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server"
 import { isAdminAuthorized } from "@/lib/admin-auth"
 import { getSupabaseServerAdminClient } from "@/lib/supabase-server"
+import { revalidatePath } from "next/cache"
 
 type SettingsInput = {
   heroImageUrl: string
@@ -26,6 +27,12 @@ type SettingsInput = {
   productsPageTitle: string
   productsPageDescription: string
   heroProductIds: string[]
+  heroSingleEyebrow: string
+  heroSingleTitle: string
+  heroSingleSubtitle: string
+  heroSingleImageUrl: string
+  heroSingleDiscountPercentage: number
+  heroSingleProductId: string
 }
 
 const MAX_COMPAT_RETRIES = 24
@@ -56,6 +63,12 @@ function mapToDbPayload(settings: SettingsInput) {
     products_page_title: settings.productsPageTitle,
     products_page_description: settings.productsPageDescription,
     hero_product_ids: settings.heroProductIds,
+    hero_single_eyebrow: settings.heroSingleEyebrow,
+    hero_single_title: settings.heroSingleTitle,
+    hero_single_subtitle: settings.heroSingleSubtitle,
+    hero_single_image_url: settings.heroSingleImageUrl,
+    hero_single_discount_percentage: settings.heroSingleDiscountPercentage,
+    hero_single_product_id: settings.heroSingleProductId,
   }
 }
 
@@ -176,12 +189,17 @@ export async function PUT(request: Request) {
   }
 
   if (result.missingColumns.length > 0) {
+    revalidatePath("/")
+    revalidatePath("/products")
     return NextResponse.json({
       success: true,
       settings: result.data,
       message: `Saved partially. Missing DB columns: ${result.missingColumns.join(", ")}. Run supabase/admin-schema.sql to enable all admin fields.`,
     })
   }
+
+  revalidatePath("/")
+  revalidatePath("/products")
 
   return NextResponse.json({ success: true, settings: result.data })
 }

@@ -7,13 +7,17 @@ import { MissionSection } from "@/components/mission-section"
 import { Footer } from "@/components/footer"
 import { TextTestimonialsSection } from "@/components/text-testimonials-section"
 import { VideoTestimonialsSection } from "@/components/video-testimonials-section"
-import { getFeaturedCatalogProducts, getSiteSettings } from "@/lib/storefront-data"
+import { HeroProductSection } from "@/components/hero-product-section"
+import { getFeaturedCatalogProducts, getHeroSingleProduct, getSiteSettings } from "@/lib/storefront-data"
 
-export const dynamic = "force-dynamic"
-export const revalidate = 0
+export const revalidate = 120
 
 export default async function Home() {
-  const [siteSettings, featuredProducts] = await Promise.all([getSiteSettings(), getFeaturedCatalogProducts(3)])
+  const [siteSettings, featuredProducts, heroSingleProduct] = await Promise.all([
+    getSiteSettings(),
+    getFeaturedCatalogProducts(3),
+    getHeroSingleProduct(),
+  ])
 
   return (
     <main className="min-h-screen bg-background">
@@ -36,7 +40,15 @@ export default async function Home() {
         videos={siteSettings.videoReviews}
       />
       <ScienceSection />
-            <TextTestimonialsSection/>
+      <HeroProductSection
+        product={heroSingleProduct}
+        eyebrow={siteSettings.heroSingleEyebrow}
+        title={siteSettings.heroSingleTitle}
+        subtitle={siteSettings.heroSingleSubtitle}
+        imageUrl={siteSettings.heroSingleImageUrl}
+        discountPercentage={siteSettings.heroSingleDiscountPercentage}
+      />
+      <TextTestimonialsSection/>
       <SpotlightSection
         imageUrl={siteSettings.bannerImage1}
         subtitle={siteSettings.spotlightSubtitle}

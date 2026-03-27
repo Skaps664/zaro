@@ -53,7 +53,13 @@ export function MissionSection({
       <div className="relative max-w-7xl mx-auto rounded-[48px] overflow-hidden min-h-[560px] md:min-h-[640px] lg:min-h-[700px]">
         {/* Background Image */}
         <div className="absolute inset-0">
-          <img src={imageUrl} alt="ZARU luxury fragrance lifestyle" className="w-full h-full object-cover" />
+          <img
+            src={imageUrl}
+            alt="ZARU luxury fragrance lifestyle"
+            className="w-full h-full object-cover"
+            loading="lazy"
+            decoding="async"
+          />
           {/* Dark overlay for text readability */}
           <div className="absolute inset-0 bg-foreground/50" />
 

@@ -33,6 +33,64 @@ type VideoReview = {
   videoUrl: string
 }
 
+const defaultVideoReviews: VideoReview[] = [
+  {
+    id: "review-1",
+    name: "Ayaan",
+    title: "Victory Crown Reaction",
+    duration: "0:42",
+    thumbnail: "/images/fragrance-victory-crown.jpg",
+    videoUrl: "",
+  },
+  {
+    id: "review-2",
+    name: "Lina",
+    title: "Wild Storm First Wear",
+    duration: "0:55",
+    thumbnail: "/images/fragrance-wild-storm.jpg",
+    videoUrl: "",
+  },
+  {
+    id: "review-3",
+    name: "Ravi",
+    title: "Blue Legacy Compliments",
+    duration: "0:38",
+    thumbnail: "/images/fragrance-blue-legacy.jpg",
+    videoUrl: "",
+  },
+  {
+    id: "review-4",
+    name: "Customer 4",
+    title: "Loved the longevity",
+    duration: "0:45",
+    thumbnail: "/images/hero-zaru.jpg",
+    videoUrl: "",
+  },
+  {
+    id: "review-5",
+    name: "Customer 5",
+    title: "Great projection",
+    duration: "0:40",
+    thumbnail: "/images/hero-zaru.jpg",
+    videoUrl: "",
+  },
+]
+
+function normalizeVideoReviews(raw: unknown): VideoReview[] {
+  const incoming = Array.isArray(raw) ? raw : []
+  return defaultVideoReviews.map((fallback, index) => {
+    const candidate = incoming[index] as Partial<VideoReview> | undefined
+    return {
+      id: candidate?.id || fallback.id,
+      name: candidate?.name || fallback.name,
+      title: candidate?.title || fallback.title,
+      duration: candidate?.duration || fallback.duration,
+      thumbnail: candidate?.thumbnail || fallback.thumbnail,
+      videoUrl: candidate?.videoUrl || "",
+    }
+  })
+}
+
 type SiteSettings = {
   hero_image_url: string
   banner_image_1: string
@@ -57,6 +115,12 @@ type SiteSettings = {
   products_page_title: string
   products_page_description: string
   hero_product_ids: string[]
+  hero_single_eyebrow: string
+  hero_single_title: string
+  hero_single_subtitle: string
+  hero_single_image_url: string
+  hero_single_discount_percentage: number
+  hero_single_product_id: string
 }
 
 type Order = {
@@ -90,7 +154,7 @@ const defaultSettings: SiteSettings = {
   hero_products_subtitle: "Experience luxury without compromise.",
   video_reviews_heading: "Video Reviews",
   video_reviews_subheading: "Here's what our customer think about our products",
-  video_reviews: [],
+  video_reviews: defaultVideoReviews,
   spotlight_subtitle: "Inside ZARU",
   spotlight_title: "Crafted for presence, designed for everyday wear",
   spotlight_paragraph_1:
@@ -105,6 +169,12 @@ const defaultSettings: SiteSettings = {
   products_page_title: "All 14 ZARU Fragrances",
   products_page_description: "Original-like scents. Stronger performance. Smarter price.",
   hero_product_ids: [],
+  hero_single_eyebrow: "Featured Drop",
+  hero_single_title: "One signature scent, made to stand out",
+  hero_single_subtitle: "Limited-time offer on our handpicked fragrance.",
+  hero_single_image_url: "",
+  hero_single_discount_percentage: 20,
+  hero_single_product_id: "",
 }
 
 const defaultProductForm = {
@@ -126,7 +196,7 @@ const defaultProductForm = {
   hideOnAllProducts: false,
 }
 
-type AdminTab = "dashboard" | "orders" | "products" | "home" | "all-products"
+type AdminTab = "dashboard" | "orders" | "products" | "home" | "hero-product" | "all-products"
 
 export function AdminPageContent() {
   const [adminKey, setAdminKey] = useState("")
@@ -144,6 +214,8 @@ export function AdminPageContent() {
   const [pendingHeroImage, setPendingHeroImage] = useState<File | null>(null)
   const [pendingBanner1Image, setPendingBanner1Image] = useState<File | null>(null)
   const [pendingBanner2Image, setPendingBanner2Image] = useState<File | null>(null)
+  const [pendingHeroProductImage, setPendingHeroProductImage] = useState<File | null>(null)
+  const [pendingReviewVideoFiles, setPendingReviewVideoFiles] = useState<Record<string, File | null>>({})
 
   useEffect(() => {
     const stored = window.localStorage.getItem("zaru_admin_key")
@@ -193,7 +265,8 @@ export function AdminPageContent() {
       if (!ordersRes.ok || !ordersPayload.success) throw new Error(ordersPayload.message ?? "Failed to load orders")
 
       setProducts(productsPayload.products ?? [])
-      setSettings({ ...defaultSettings, ...(settingsPayload.settings ?? {}) })
+      const merged = { ...defaultSettings, ...(settingsPayload.settings ?? {}) }
+      setSettings({ ...merged, video_reviews: normalizeVideoReviews(merged.video_reviews) })
       setOrders(ordersPayload.orders ?? [])
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Admin load failed")
@@ -263,8 +336,15 @@ export function AdminPageContent() {
     }
   }
 
-  const uploadSettingImage = async (kind: "hero" | "banner1" | "banner2") => {
-    const file = kind === "hero" ? pendingHeroImage : kind === "banner1" ? pendingBanner1Image : pendingBanner2Image
+  const uploadSettingImage = async (kind: "hero" | "banner1" | "banner2" | "hero-product") => {
+    const file =
+      kind === "hero"
+        ? pendingHeroImage
+        : kind === "banner1"
+          ? pendingBanner1Image
+          : kind === "banner2"
+            ? pendingBanner2Image
+            : pendingHeroProductImage
     if (!file) {
       toast.error("Select image first")
       return
@@ -276,11 +356,13 @@ export function AdminPageContent() {
       setSettings((prev) => {
         if (kind === "hero") return { ...prev, hero_image_url: url }
         if (kind === "banner1") return { ...prev, banner_image_1: url }
+        if (kind === "hero-product") return { ...prev, hero_single_image_url: url }
         return { ...prev, banner_image_2: url }
       })
       if (kind === "hero") setPendingHeroImage(null)
       if (kind === "banner1") setPendingBanner1Image(null)
       if (kind === "banner2") setPendingBanner2Image(null)
+      if (kind === "hero-product") setPendingHeroProductImage(null)
       toast.success("Image uploaded")
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Upload failed")
@@ -386,6 +468,38 @@ export function AdminPageContent() {
     }
   }
 
+  const buildSettingsPayload = (overrides?: Partial<{ heroProductIds: string[] }>) => ({
+    heroImageUrl: settings.hero_image_url,
+    bannerImage1: settings.banner_image_1,
+    bannerImage2: settings.banner_image_2,
+    heroTitleLine1: settings.hero_title_line1,
+    heroTitleLine2: settings.hero_title_line2,
+    heroSubtitle: settings.hero_subtitle,
+    heroProductsEyebrow: settings.hero_products_eyebrow,
+    heroProductsTitle: settings.hero_products_title,
+    heroProductsSubtitle: settings.hero_products_subtitle,
+    videoReviewsHeading: settings.video_reviews_heading,
+    videoReviewsSubheading: settings.video_reviews_subheading,
+    videoReviews: settings.video_reviews,
+    spotlightSubtitle: settings.spotlight_subtitle,
+    spotlightTitle: settings.spotlight_title,
+    spotlightParagraph1: settings.spotlight_paragraph_1,
+    spotlightParagraph2: settings.spotlight_paragraph_2,
+    missionEyebrow: settings.mission_eyebrow,
+    missionTitle: settings.mission_title,
+    missionParagraph: settings.mission_paragraph,
+    missionCta: settings.mission_cta,
+    productsPageTitle: settings.products_page_title,
+    productsPageDescription: settings.products_page_description,
+    heroProductIds: overrides?.heroProductIds ?? settings.hero_product_ids,
+    heroSingleEyebrow: settings.hero_single_eyebrow,
+    heroSingleTitle: settings.hero_single_title,
+    heroSingleSubtitle: settings.hero_single_subtitle,
+    heroSingleImageUrl: settings.hero_single_image_url,
+    heroSingleDiscountPercentage: settings.hero_single_discount_percentage,
+    heroSingleProductId: settings.hero_single_product_id,
+  })
+
   const deleteAllProducts = async () => {
     setIsSaving(true)
     try {
@@ -400,31 +514,7 @@ export function AdminPageContent() {
         method: "PUT",
         headers: adminHeaders,
         body: JSON.stringify({
-          settings: {
-            heroImageUrl: settings.hero_image_url,
-            bannerImage1: settings.banner_image_1,
-            bannerImage2: settings.banner_image_2,
-            heroTitleLine1: settings.hero_title_line1,
-            heroTitleLine2: settings.hero_title_line2,
-            heroSubtitle: settings.hero_subtitle,
-            heroProductsEyebrow: settings.hero_products_eyebrow,
-            heroProductsTitle: settings.hero_products_title,
-            heroProductsSubtitle: settings.hero_products_subtitle,
-            videoReviewsHeading: settings.video_reviews_heading,
-            videoReviewsSubheading: settings.video_reviews_subheading,
-            videoReviews: settings.video_reviews,
-            spotlightSubtitle: settings.spotlight_subtitle,
-            spotlightTitle: settings.spotlight_title,
-            spotlightParagraph1: settings.spotlight_paragraph_1,
-            spotlightParagraph2: settings.spotlight_paragraph_2,
-            missionEyebrow: settings.mission_eyebrow,
-            missionTitle: settings.mission_title,
-            missionParagraph: settings.mission_paragraph,
-            missionCta: settings.mission_cta,
-            productsPageTitle: settings.products_page_title,
-            productsPageDescription: settings.products_page_description,
-            heroProductIds: [],
-          },
+          settings: buildSettingsPayload({ heroProductIds: [] }),
         }),
       })
 
@@ -451,31 +541,7 @@ export function AdminPageContent() {
         method: "PUT",
         headers: adminHeaders,
         body: JSON.stringify({
-          settings: {
-            heroImageUrl: settings.hero_image_url,
-            bannerImage1: settings.banner_image_1,
-            bannerImage2: settings.banner_image_2,
-            heroTitleLine1: settings.hero_title_line1,
-            heroTitleLine2: settings.hero_title_line2,
-            heroSubtitle: settings.hero_subtitle,
-            heroProductsEyebrow: settings.hero_products_eyebrow,
-            heroProductsTitle: settings.hero_products_title,
-            heroProductsSubtitle: settings.hero_products_subtitle,
-            videoReviewsHeading: settings.video_reviews_heading,
-            videoReviewsSubheading: settings.video_reviews_subheading,
-            videoReviews: settings.video_reviews,
-            spotlightSubtitle: settings.spotlight_subtitle,
-            spotlightTitle: settings.spotlight_title,
-            spotlightParagraph1: settings.spotlight_paragraph_1,
-            spotlightParagraph2: settings.spotlight_paragraph_2,
-            missionEyebrow: settings.mission_eyebrow,
-            missionTitle: settings.mission_title,
-            missionParagraph: settings.mission_paragraph,
-            missionCta: settings.mission_cta,
-            productsPageTitle: settings.products_page_title,
-            productsPageDescription: settings.products_page_description,
-            heroProductIds: settings.hero_product_ids,
-          },
+          settings: buildSettingsPayload(),
         }),
       })
 
@@ -501,31 +567,7 @@ export function AdminPageContent() {
         method: "PUT",
         headers: adminHeaders,
         body: JSON.stringify({
-          settings: {
-            heroImageUrl: settings.hero_image_url,
-            bannerImage1: settings.banner_image_1,
-            bannerImage2: settings.banner_image_2,
-            heroTitleLine1: settings.hero_title_line1,
-            heroTitleLine2: settings.hero_title_line2,
-            heroSubtitle: settings.hero_subtitle,
-            heroProductsEyebrow: settings.hero_products_eyebrow,
-            heroProductsTitle: settings.hero_products_title,
-            heroProductsSubtitle: settings.hero_products_subtitle,
-            videoReviewsHeading: settings.video_reviews_heading,
-            videoReviewsSubheading: settings.video_reviews_subheading,
-            videoReviews: settings.video_reviews,
-            spotlightSubtitle: settings.spotlight_subtitle,
-            spotlightTitle: settings.spotlight_title,
-            spotlightParagraph1: settings.spotlight_paragraph_1,
-            spotlightParagraph2: settings.spotlight_paragraph_2,
-            missionEyebrow: settings.mission_eyebrow,
-            missionTitle: settings.mission_title,
-            missionParagraph: settings.mission_paragraph,
-            missionCta: settings.mission_cta,
-            productsPageTitle: settings.products_page_title,
-            productsPageDescription: settings.products_page_description,
-            heroProductIds: settings.hero_product_ids,
-          },
+          settings: buildSettingsPayload(),
         }),
       })
 
@@ -576,6 +618,30 @@ export function AdminPageContent() {
     }
   }
 
+  const saveHeroProductSettings = async () => {
+    setIsSaving(true)
+    try {
+      const res = await fetch("/api/admin/settings", {
+        method: "PUT",
+        headers: adminHeaders,
+        body: JSON.stringify({ settings: buildSettingsPayload() }),
+      })
+
+      const json = (await res.json()) as { success: boolean; message?: string }
+      if (!res.ok || !json.success) throw new Error(json.message ?? "Save failed")
+      if (json.message) {
+        toast.warning(json.message)
+      } else {
+        toast.success("Hero product settings saved")
+      }
+      await loadData()
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Save failed")
+    } finally {
+      setIsSaving(false)
+    }
+  }
+
   const updateOrder = async (order: Order) => {
     try {
       const res = await fetch(`/api/admin/orders/${order.id}`, {
@@ -598,18 +664,6 @@ export function AdminPageContent() {
     }
   }
 
-  const addVideoReview = () => {
-    const next = {
-      id: `review-${Date.now()}`,
-      name: "",
-      title: "",
-      duration: "",
-      thumbnail: "",
-      videoUrl: "",
-    }
-    setSettings((prev) => ({ ...prev, video_reviews: [...prev.video_reviews, next] }))
-  }
-
   const updateVideoReview = (id: string, key: keyof VideoReview, value: string) => {
     setSettings((prev) => ({
       ...prev,
@@ -617,8 +671,24 @@ export function AdminPageContent() {
     }))
   }
 
-  const removeVideoReview = (id: string) => {
-    setSettings((prev) => ({ ...prev, video_reviews: prev.video_reviews.filter((item) => item.id !== id) }))
+  const uploadReviewVideo = async (id: string) => {
+    const file = pendingReviewVideoFiles[id]
+    if (!file) {
+      toast.error("Select a video file first")
+      return
+    }
+
+    setIsUploading(true)
+    try {
+      const url = await uploadAsset(file, "reviews")
+      updateVideoReview(id, "videoUrl", url)
+      setPendingReviewVideoFiles((prev) => ({ ...prev, [id]: null }))
+      toast.success("Review video uploaded")
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Upload failed")
+    } finally {
+      setIsUploading(false)
+    }
   }
 
   if (!canAccess) {
@@ -653,15 +723,21 @@ export function AdminPageContent() {
           <h1 className="font-serif text-4xl md:text-5xl text-foreground">Store Admin Panel</h1>
         </div>
 
-        <div className="mb-6 grid grid-cols-2 md:grid-cols-5 gap-2">
-          {["dashboard", "orders", "products", "home", "all-products"].map((tab) => (
+        <div className="mb-6 grid grid-cols-2 md:grid-cols-6 gap-2">
+          {["dashboard", "orders", "products", "home", "hero-product", "all-products"].map((tab) => (
             <Button
               key={tab}
               variant={activeTab === tab ? "default" : "outline"}
               className="rounded-full bg-transparent"
               onClick={() => setActiveTab(tab as AdminTab)}
             >
-              {tab === "all-products" ? "All Products Page" : tab === "home" ? "Home Page" : tab[0].toUpperCase() + tab.slice(1)}
+              {tab === "all-products"
+                ? "All Products Page"
+                : tab === "home"
+                  ? "Home Page"
+                  : tab === "hero-product"
+                    ? "Hero Product"
+                    : tab[0].toUpperCase() + tab.slice(1)}
             </Button>
           ))}
         </div>
@@ -874,7 +950,7 @@ export function AdminPageContent() {
               <input
                 value={productForm.videoEmbedUrl}
                 onChange={(event) => setProductForm((prev) => ({ ...prev, videoEmbedUrl: event.target.value }))}
-                placeholder="Video embed URL"
+                placeholder="YouTube URL (watch/share/embed)"
                 className="h-10 w-full rounded-xl border border-border/70 bg-background px-3 text-sm"
               />
               <input
@@ -1014,8 +1090,6 @@ export function AdminPageContent() {
                 <input value={settings.video_reviews_subheading} onChange={(event) => setSettings((prev) => ({ ...prev, video_reviews_subheading: event.target.value }))} placeholder="Video section subheading" className="h-10 rounded-xl border border-border/70 bg-background px-3 text-sm" />
               </div>
 
-              <Button type="button" variant="outline" className="rounded-full bg-transparent" onClick={addVideoReview}>Add Video Review</Button>
-
               <div className="space-y-3">
                 {settings.video_reviews.map((review) => (
                   <div key={review.id} className="rounded-2xl border border-border/60 bg-background p-3 space-y-2">
@@ -1028,7 +1102,26 @@ export function AdminPageContent() {
                       <input value={review.thumbnail} onChange={(event) => updateVideoReview(review.id, "thumbnail", event.target.value)} placeholder="Thumbnail URL" className="h-10 rounded-xl border border-border/70 bg-background px-3 text-sm" />
                     </div>
                     <input value={review.videoUrl} onChange={(event) => updateVideoReview(review.id, "videoUrl", event.target.value)} placeholder="Video URL" className="h-10 w-full rounded-xl border border-border/70 bg-background px-3 text-sm" />
-                    <Button type="button" size="sm" variant="outline" className="rounded-full bg-transparent" onClick={() => removeVideoReview(review.id)}>Remove</Button>
+                    <div className="flex flex-wrap gap-2 items-center">
+                      <input
+                        type="file"
+                        accept="video/*"
+                        onChange={(event) =>
+                          setPendingReviewVideoFiles((prev) => ({ ...prev, [review.id]: event.target.files?.[0] ?? null }))
+                        }
+                        className="text-xs"
+                      />
+                      <Button
+                        type="button"
+                        size="sm"
+                        variant="outline"
+                        className="rounded-full bg-transparent"
+                        onClick={() => void uploadReviewVideo(review.id)}
+                        disabled={isUploading}
+                      >
+                        {isUploading ? "Uploading..." : "Upload video"}
+                      </Button>
+                    </div>
                   </div>
                 ))}
               </div>
@@ -1119,6 +1212,94 @@ export function AdminPageContent() {
             <Button className="rounded-full" onClick={() => void saveAllProductsPageSettings()} disabled={isSaving}>
               {isSaving ? "Saving..." : "Save All Products Page"}
             </Button>
+          </div>
+        )}
+
+        {activeTab === "hero-product" && (
+          <div className="space-y-6">
+            <div className="rounded-3xl border border-border/60 bg-card p-6 space-y-3">
+              <h2 className="font-serif text-2xl text-foreground">Hero Product Section</h2>
+              <div className="grid gap-3 sm:grid-cols-2">
+                <input
+                  value={settings.hero_single_eyebrow}
+                  onChange={(event) => setSettings((prev) => ({ ...prev, hero_single_eyebrow: event.target.value }))}
+                  placeholder="Eyebrow text"
+                  className="h-10 rounded-xl border border-border/70 bg-background px-3 text-sm"
+                />
+                <input
+                  value={settings.hero_single_title}
+                  onChange={(event) => setSettings((prev) => ({ ...prev, hero_single_title: event.target.value }))}
+                  placeholder="Title"
+                  className="h-10 rounded-xl border border-border/70 bg-background px-3 text-sm"
+                />
+              </div>
+
+              <textarea
+                value={settings.hero_single_subtitle}
+                onChange={(event) => setSettings((prev) => ({ ...prev, hero_single_subtitle: event.target.value }))}
+                placeholder="Subtitle"
+                className="min-h-20 w-full rounded-xl border border-border/70 bg-background px-3 py-2 text-sm"
+              />
+
+              <div className="grid gap-3 sm:grid-cols-2">
+                <select
+                  value={settings.hero_single_product_id}
+                  onChange={(event) => setSettings((prev) => ({ ...prev, hero_single_product_id: event.target.value }))}
+                  className="h-10 rounded-xl border border-border/70 bg-background px-3 text-sm"
+                >
+                  <option value="">Select product</option>
+                  {products.map((product) => (
+                    <option key={product.id} value={product.id}>
+                      {product.name}
+                    </option>
+                  ))}
+                </select>
+
+                <input
+                  type="number"
+                  min={0}
+                  max={90}
+                  value={settings.hero_single_discount_percentage}
+                  onChange={(event) =>
+                    setSettings((prev) => ({
+                      ...prev,
+                      hero_single_discount_percentage: Math.max(0, Math.min(90, Number(event.target.value || 0))),
+                    }))
+                  }
+                  placeholder="Discount percentage"
+                  className="h-10 rounded-xl border border-border/70 bg-background px-3 text-sm"
+                />
+              </div>
+
+              <input
+                value={settings.hero_single_image_url}
+                onChange={(event) => setSettings((prev) => ({ ...prev, hero_single_image_url: event.target.value }))}
+                placeholder="Section image URL (optional override)"
+                className="h-10 w-full rounded-xl border border-border/70 bg-background px-3 text-sm"
+              />
+
+              <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={(event) => setPendingHeroProductImage(event.target.files?.[0] ?? null)}
+                  className="text-xs"
+                />
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="rounded-full bg-transparent"
+                  onClick={() => void uploadSettingImage("hero-product")}
+                  disabled={isUploading}
+                >
+                  {isUploading ? "Uploading..." : "Upload hero product image"}
+                </Button>
+              </div>
+
+              <Button className="rounded-full" onClick={() => void saveHeroProductSettings()} disabled={isSaving}>
+                {isSaving ? "Saving..." : "Save Hero Product Settings"}
+              </Button>
+            </div>
           </div>
         )}
       </div>

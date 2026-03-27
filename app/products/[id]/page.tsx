@@ -10,8 +10,7 @@ import { ProductVideoSection } from "@/components/product-video-section"
 import { getCatalogProductById, getCatalogProducts } from "@/lib/storefront-data"
 import { getProductPrice } from "@/lib/products"
 
-export const dynamic = "force-dynamic"
-export const revalidate = 0
+export const revalidate = 120
 
 type ProductPageProps = {
   params: Promise<{ id: string }>
@@ -131,6 +130,8 @@ export default async function ProductDetailPage({ params }: ProductPageProps) {
                       src={item.images?.[0] ?? item.image}
                       alt={item.name}
                       className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                      loading="lazy"
+                      decoding="async"
                     />
                   </div>
                   <div className="p-4">

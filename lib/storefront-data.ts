@@ -25,6 +25,12 @@ type SiteSettings = {
   productsPageTitle: string
   productsPageDescription: string
   heroProductIds: string[]
+  heroSingleEyebrow: string
+  heroSingleTitle: string
+  heroSingleSubtitle: string
+  heroSingleImageUrl: string
+  heroSingleDiscountPercentage: number
+  heroSingleProductId: string
 }
 
 type ProductRow = {
@@ -84,6 +90,22 @@ const defaultSettings: SiteSettings = {
       thumbnail: "/images/fragrance-blue-legacy.jpg",
       videoUrl: "",
     },
+    {
+      id: "review-4",
+      name: "Customer 4",
+      duration: "0:45",
+      title: "Loved the longevity",
+      thumbnail: "/images/hero-zaru.jpg",
+      videoUrl: "",
+    },
+    {
+      id: "review-5",
+      name: "Customer 5",
+      duration: "0:40",
+      title: "Great projection",
+      thumbnail: "/images/hero-zaru.jpg",
+      videoUrl: "",
+    },
   ],
   spotlightSubtitle: "Inside ZARU",
   spotlightTitle: "Crafted for presence, designed for everyday wear",
@@ -99,6 +121,27 @@ const defaultSettings: SiteSettings = {
   productsPageTitle: "All 14 ZARU Fragrances",
   productsPageDescription: "Original-like scents. Stronger performance. Smarter price.",
   heroProductIds: featuredProducts.slice(0, 3).map((item) => item.id),
+  heroSingleEyebrow: "Featured Drop",
+  heroSingleTitle: "One signature scent, made to stand out",
+  heroSingleSubtitle: "Limited-time offer on our handpicked fragrance.",
+  heroSingleImageUrl: "",
+  heroSingleDiscountPercentage: 20,
+  heroSingleProductId: featuredProducts[0]?.id ?? "",
+}
+
+function normalizeVideoReviews(raw: unknown) {
+  const incoming = Array.isArray(raw) ? raw : []
+  return defaultSettings.videoReviews.map((fallback, index) => {
+    const candidate = incoming[index] as Partial<(typeof defaultSettings.videoReviews)[number]> | undefined
+    return {
+      id: candidate?.id || fallback.id,
+      name: candidate?.name || fallback.name,
+      title: candidate?.title || fallback.title,
+      duration: candidate?.duration || fallback.duration,
+      thumbnail: candidate?.thumbnail || fallback.thumbnail,
+      videoUrl: candidate?.videoUrl || "",
+    }
+  })
 }
 
 function mapRowToProduct(row: ProductRow): Product {
@@ -147,7 +190,7 @@ export async function getSiteSettings(): Promise<SiteSettings> {
     heroProductsSubtitle: data.hero_products_subtitle || defaultSettings.heroProductsSubtitle,
     videoReviewsHeading: data.video_reviews_heading || defaultSettings.videoReviewsHeading,
     videoReviewsSubheading: data.video_reviews_subheading || defaultSettings.videoReviewsSubheading,
-    videoReviews: Array.isArray(data.video_reviews) ? data.video_reviews : defaultSettings.videoReviews,
+    videoReviews: normalizeVideoReviews(data.video_reviews),
     spotlightSubtitle: data.spotlight_subtitle || defaultSettings.spotlightSubtitle,
     spotlightTitle: data.spotlight_title || defaultSettings.spotlightTitle,
     spotlightParagraph1: data.spotlight_paragraph_1 || defaultSettings.spotlightParagraph1,
@@ -159,6 +202,15 @@ export async function getSiteSettings(): Promise<SiteSettings> {
     productsPageTitle: data.products_page_title || defaultSettings.productsPageTitle,
     productsPageDescription: data.products_page_description || defaultSettings.productsPageDescription,
     heroProductIds: Array.isArray(data.hero_product_ids) ? data.hero_product_ids : defaultSettings.heroProductIds,
+    heroSingleEyebrow: data.hero_single_eyebrow || defaultSettings.heroSingleEyebrow,
+    heroSingleTitle: data.hero_single_title || defaultSettings.heroSingleTitle,
+    heroSingleSubtitle: data.hero_single_subtitle || defaultSettings.heroSingleSubtitle,
+    heroSingleImageUrl: data.hero_single_image_url || defaultSettings.heroSingleImageUrl,
+    heroSingleDiscountPercentage:
+      typeof data.hero_single_discount_percentage === "number"
+        ? data.hero_single_discount_percentage
+        : defaultSettings.heroSingleDiscountPercentage,
+    heroSingleProductId: data.hero_single_product_id || defaultSettings.heroSingleProductId,
   }
 }
 
@@ -206,4 +258,15 @@ export async function getFeaturedCatalogProducts(limit = 3): Promise<Product[]> 
 export async function getCatalogProductById(id: string): Promise<Product | undefined> {
   const catalog = await getCatalogProducts()
   return catalog.find((item) => item.id === id)
+}
+
+export async function getHeroSingleProduct(): Promise<Product | undefined> {
+  const [catalog, settings] = await Promise.all([getCatalogProducts(), getSiteSettings()])
+
+  if (settings.heroSingleProductId) {
+    const selected = catalog.find((item) => item.id === settings.heroSingleProductId)
+    if (selected) return selected
+  }
+
+  return catalog[0]
 }

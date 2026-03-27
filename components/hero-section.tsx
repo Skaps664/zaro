@@ -76,6 +76,9 @@ export function HeroSection({
           src={heroImageUrl}
           alt="Luxury ZARU perfume bottles"
           className="w-full h-full object-cover animate-zoom-in"
+          loading="eager"
+          fetchPriority="high"
+          decoding="async"
         />
         {/* Subtle dark overlay for text readability */}
         <div className="absolute inset-0 bg-gradient-to-r from-foreground/60 via-foreground/40 to-transparent" />

@@ -48,6 +48,8 @@ export function SpotlightSection({
                 src={imageUrl}
                 alt="Luxury fragrance experience"
                 className="w-full h-[380px] md:h-[460px] object-cover"
+                loading="lazy"
+                decoding="async"
               />
             </div>
           </div>

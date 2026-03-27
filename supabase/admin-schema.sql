@@ -44,7 +44,13 @@ create table if not exists public.site_settings (
   mission_cta text not null default 'Start exploring',
   products_page_title text not null default 'All 14 ZARU Fragrances',
   products_page_description text not null default 'Original-like scents. Stronger performance. Smarter price.',
-  hero_product_ids text[] not null default '{}'
+  hero_product_ids text[] not null default '{}',
+  hero_single_eyebrow text not null default 'Featured Drop',
+  hero_single_title text not null default 'One signature scent, made to stand out',
+  hero_single_subtitle text not null default 'Limited-time offer on our handpicked fragrance.',
+  hero_single_image_url text not null default '',
+  hero_single_discount_percentage integer not null default 20,
+  hero_single_product_id text not null default ''
 );
 
 insert into public.site_settings (id)
@@ -69,6 +75,12 @@ alter table public.site_settings add column if not exists mission_eyebrow text n
 alter table public.site_settings add column if not exists mission_title text not null default 'Luxury without compromise';
 alter table public.site_settings add column if not exists mission_paragraph text not null default 'At ZARU, we''re redefining what luxury fragrance means. We believe premium quality shouldn''t require a premium price tag. Every fragrance is meticulously crafted to deliver the same emotional experience, accuracy, and longevity as designer scents.';
 alter table public.site_settings add column if not exists mission_cta text not null default 'Start exploring';
+alter table public.site_settings add column if not exists hero_single_eyebrow text not null default 'Featured Drop';
+alter table public.site_settings add column if not exists hero_single_title text not null default 'One signature scent, made to stand out';
+alter table public.site_settings add column if not exists hero_single_subtitle text not null default 'Limited-time offer on our handpicked fragrance.';
+alter table public.site_settings add column if not exists hero_single_image_url text not null default '';
+alter table public.site_settings add column if not exists hero_single_discount_percentage integer not null default 20;
+alter table public.site_settings add column if not exists hero_single_product_id text not null default '';
 
 insert into storage.buckets (id, name, public)
 values ('zaru-assets', 'zaru-assets', true)

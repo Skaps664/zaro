@@ -32,6 +32,56 @@ type CheckoutBody = {
   whatsapp?: string
 }
 
+const ADMIN_ORDER_EMAIL = process.env.ADMIN_ORDER_EMAIL ?? "Zarufragrancehub@gmail.com"
+
+async function sendAdminOrderEmail(orderId: string, payload: CheckoutBody, subtotalAmount: number, discountAmount: number, payableAmount: number) {
+  const resendKey = process.env.RESEND_API_KEY
+  if (!resendKey) return false
+
+  const fromEmail = process.env.ORDER_EMAIL_FROM ?? "orders@zaruscents.com"
+
+  const itemRows = payload.items
+    .map((item) => `<li>${item.name} x${item.quantity} - PKR ${item.lineTotal}</li>`)
+    .join("")
+
+  const html = `
+    <h2>New Order Received</h2>
+    <p><strong>Order ID:</strong> ${orderId}</p>
+    <p><strong>Name:</strong> ${payload.customer.fullName}</p>
+    <p><strong>Email:</strong> ${payload.customer.email ?? "N/A"}</p>
+    <p><strong>Phone:</strong> ${payload.customer.phone}</p>
+    <p><strong>City:</strong> ${payload.customer.city}</p>
+    <p><strong>Address:</strong> ${payload.customer.address}</p>
+    <p><strong>Payment Type:</strong> ${payload.payment.type === "cod" ? "Cash on Delivery" : "Advance Payment"}</p>
+    <p><strong>Payment Method:</strong> ${payload.payment.method}</p>
+    <p><strong>Reference:</strong> ${payload.payment.reference ?? "N/A"}</p>
+    <p><strong>Subtotal:</strong> PKR ${subtotalAmount}</p>
+    <p><strong>Discount:</strong> PKR ${discountAmount}</p>
+    <p><strong>Payable:</strong> PKR ${payableAmount}</p>
+    <p><strong>Total Items:</strong> ${payload.totalItems}</p>
+    <p><strong>Notes:</strong> ${payload.notes ?? "N/A"}</p>
+    <h3>Items</h3>
+    <ul>${itemRows}</ul>
+  `
+
+  const response = await fetch("https://api.resend.com/emails", {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${resendKey}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      from: fromEmail,
+      to: [ADMIN_ORDER_EMAIL],
+      subject: `New ZARU order: ${orderId}`,
+      html,
+    }),
+    cache: "no-store",
+  })
+
+  return response.ok
+}
+
 function createOrderId() {
   const rand = Math.floor(Math.random() * 900 + 100)
   return `ZR-${Date.now().toString().slice(-7)}-${rand}`
@@ -117,6 +167,10 @@ export async function POST(request: Request) {
       return NextResponse.json({ success: false, message: "Missing required customer fields" }, { status: 400 })
     }
 
+    if (!body.customer.email || !body.customer.email.trim()) {
+      return NextResponse.json({ success: false, message: "Email is required" }, { status: 400 })
+    }
+
     if (!Array.isArray(body.items) || body.items.length === 0) {
       return NextResponse.json({ success: false, message: "Cart is empty" }, { status: 400 })
     }
@@ -155,6 +209,8 @@ export async function POST(request: Request) {
         return NextResponse.json({ success: false, message: saveError.message }, { status: 500 })
       }
     }
+
+    await sendAdminOrderEmail(orderId, body, subtotalAmount, discountAmount, payableAmount)
 
     try {
       const synced = await submitToGoogleSheet(orderMessage, body)

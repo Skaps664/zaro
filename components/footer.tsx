@@ -31,7 +31,7 @@ export function Footer() {
           {/* Brand */}
           <div className="lg:col-span-2">
             <Link href="/" className="flex items-center gap-2 mb-6">
-              <img src="/zaru-logo-white.png" alt="ZARU logo" className="h-10 w-auto" />
+              <img src="/zaru-logo-white.png" alt="ZARU logo" className="h-10 w-auto" loading="lazy" decoding="async" />
             </Link>
             <p className="text-background/70 leading-relaxed mb-6 max-w-sm">
               Premium fragrance impressions inspired by iconic scents. Crafted for performance, designed for confidence.

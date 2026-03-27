@@ -1,11 +1,13 @@
 import type { Product } from "@/lib/products"
+import { normalizeYouTubeEmbedUrl } from "@/lib/video-utils"
 
 type ProductVideoSectionProps = {
   product: Product
 }
 
 export function ProductVideoSection({ product }: ProductVideoSectionProps) {
-  const embedUrl = product.videoEmbedUrl ?? "https://www.youtube.com/embed/4d8rM8NfP7g"
+  const embedUrl =
+    normalizeYouTubeEmbedUrl(product.videoEmbedUrl) || "https://www.youtube.com/embed/4d8rM8NfP7g"
 
   return (
     <section className="mt-12 lg:mt-16">

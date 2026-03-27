@@ -14,7 +14,7 @@ export function Header() {
         <div className="flex items-center justify-between h-20 px-6 lg:px-8">
           {/* Logo */}
           <Link href="/" className="flex items-center gap-2">
-            <img src="/zaru-logo.png" alt="ZARU logo" className="h-10 w-auto" />
+            <img src="/zaru-logo.png" alt="ZARU logo" className="h-10 w-auto" loading="eager" decoding="async" />
           </Link>
 
           {/* Desktop Right Group */}

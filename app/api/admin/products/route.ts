@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server"
 import { isAdminAuthorized } from "@/lib/admin-auth"
 import { getSupabaseServerAdminClient } from "@/lib/supabase-server"
+import { normalizeYouTubeEmbedUrl } from "@/lib/video-utils"
+import { revalidatePath } from "next/cache"
 
 type AdminProductInput = {
   id: string
@@ -37,7 +39,7 @@ function mapToDbPayload(input: AdminProductInput) {
     time: input.time,
     image: input.image,
     images: Array.isArray(input.images) && input.images.length > 0 ? input.images : [input.image],
-    video_embed_url: input.videoEmbedUrl ?? null,
+    video_embed_url: normalizeYouTubeEmbedUrl(input.videoEmbedUrl) || null,
     price: input.price ?? 3490,
     is_hero: Boolean(input.isHero),
     hide_on_all_products: Boolean(input.hideOnAllProducts),
@@ -90,6 +92,10 @@ export async function POST(request: Request) {
     return NextResponse.json({ success: false, message: error.message }, { status: 500 })
   }
 
+  revalidatePath("/")
+  revalidatePath("/products")
+  revalidatePath(`/products/${product.id}`)
+
   return NextResponse.json({ success: true, product: data })
 }
 
@@ -120,6 +126,10 @@ export async function PUT(request: Request) {
     return NextResponse.json({ success: false, message: error.message }, { status: 500 })
   }
 
+  revalidatePath("/")
+  revalidatePath("/products")
+  revalidatePath(`/products/${product.id}`)
+
   return NextResponse.json({ success: true, product: data })
 }
 
@@ -143,6 +153,9 @@ export async function DELETE(request: Request) {
       return NextResponse.json({ success: false, message: error.message }, { status: 500 })
     }
 
+    revalidatePath("/")
+    revalidatePath("/products")
+
     return NextResponse.json({ success: true })
   }
 
@@ -155,6 +168,10 @@ export async function DELETE(request: Request) {
   if (error) {
     return NextResponse.json({ success: false, message: error.message }, { status: 500 })
   }
+
+  revalidatePath("/")
+  revalidatePath("/products")
+  revalidatePath(`/products/${id}`)
 
   return NextResponse.json({ success: true })
 }
