@@ -11,7 +11,11 @@ export type Product = {
   bestFor: string
   time: string
   image: string
+  images?: string[]
+  price?: number
+  videoEmbedUrl?: string
   isHero?: boolean
+  hideOnAllProducts?: boolean
 }
 
 export const products: Product[] = [
@@ -218,6 +222,32 @@ export const products: Product[] = [
 ]
 
 export const featuredProducts = products.filter((product) => product.isHero).slice(0, 4)
+
+const productPriceById: Record<string, number> = {
+  dream: 3490,
+  royal: 3490,
+  "floral-bloom": 3290,
+  "victory-crown": 3790,
+  "executive-code": 3390,
+  desire: 3390,
+  "crystal-flame": 3890,
+  "wild-storm": 3690,
+  "active-rush": 3190,
+  "golden-elite": 3590,
+  "pink-charm": 3290,
+  "ocean-depth": 3690,
+  "discovery-set": 2490,
+  "blue-legacy": 3790,
+}
+
+export function getProductPrice(id: string) {
+  const product = getProductById(id)
+  if (typeof product?.price === "number") {
+    return product.price
+  }
+
+  return productPriceById[id] ?? 3490
+}
 
 export function getProductById(id: string) {
   return products.find((product) => product.id === id)

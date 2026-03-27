@@ -1,4 +1,5 @@
 import { StaticPageLayout } from "@/components/static-page-layout"
+import { SITE_CONTACT } from "@/lib/site-contact"
 
 export const metadata = {
   title: "Track Order | ZARU",
@@ -20,7 +21,9 @@ export default function TrackOrderPage() {
 
         <section>
           <h2 className="font-medium text-lg mb-2">Need live status?</h2>
-          <p className="text-muted-foreground leading-relaxed">Share your order ID with our team at hello@zaru.com and we will provide the latest update.</p>
+          <p className="text-muted-foreground leading-relaxed">
+            Share your order ID with our team at {SITE_CONTACT.email} or WhatsApp {SITE_CONTACT.whatsapp} and we will provide the latest update.
+          </p>
         </section>
 
         <section>

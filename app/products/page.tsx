@@ -1,11 +1,15 @@
-import Link from "next/link"
-import { ArrowRight } from "lucide-react"
 import { Header } from "@/components/header"
 import { Footer } from "@/components/footer"
-import { Button } from "@/components/ui/button"
-import { products } from "@/lib/products"
+import { ProductCard } from "@/components/product-card"
+import { getCatalogProducts, getSiteSettings } from "@/lib/storefront-data"
 
-export default function ProductsPage() {
+export const dynamic = "force-dynamic"
+export const revalidate = 0
+
+export default async function ProductsPage() {
+  const [catalog, siteSettings] = await Promise.all([getCatalogProducts(), getSiteSettings()])
+  const visibleCatalog = catalog.filter((product) => !product.hideOnAllProducts)
+
   return (
     <main className="min-h-screen bg-background">
       <Header />
@@ -16,43 +20,16 @@ export default function ProductsPage() {
               Product Collection
             </p>
             <h1 className="font-serif text-4xl md:text-5xl lg:text-6xl text-foreground mb-4 text-balance">
-              All 14 ZARU Fragrances
+              {siteSettings.productsPageTitle}
             </h1>
             <p className="text-muted-foreground max-w-2xl mx-auto leading-relaxed">
-              Original-like scents. Stronger performance. Smarter price.
+              {siteSettings.productsPageDescription}
             </p>
           </div>
 
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5 lg:gap-6">
-            {products.map((product) => (
-              <article
-                key={product.id}
-                className="group rounded-3xl border border-border/60 bg-card overflow-hidden shadow-lg shadow-primary/5 hover:shadow-xl hover:shadow-primary/10 transition-all"
-              >
-                <div className="relative aspect-[4/5] bg-muted overflow-hidden">
-                  <img
-                    src={product.image}
-                    alt={product.name}
-                    className="h-full w-full object-cover group-hover:scale-105 transition-transform duration-700"
-                  />
-                  <span className="absolute top-4 left-4 rounded-full bg-background/90 px-3 py-1 text-xs text-foreground">
-                    {product.category}
-                  </span>
-                </div>
-
-                <div className="p-5 md:p-6">
-                  <h2 className="font-serif text-2xl text-foreground mb-2">{product.name.replace("ZARU ", "")}</h2>
-                  <p className="text-sm text-muted-foreground mb-3">Inspired by {product.inspiredBy}</p>
-                  <p className="text-sm text-muted-foreground leading-relaxed mb-5 line-clamp-3">{product.description}</p>
-
-                  <Link href={`/products/${product.id}`}>
-                    <Button variant="ghost" className="p-0 h-auto text-primary hover:text-primary hover:bg-transparent group/btn">
-                      View Details
-                      <ArrowRight className="ml-2 w-4 h-4 group-hover/btn:translate-x-1 transition-transform" />
-                    </Button>
-                  </Link>
-                </div>
-              </article>
+            {visibleCatalog.map((product) => (
+              <ProductCard key={product.id} product={product} compact />
             ))}
           </div>
         </div>

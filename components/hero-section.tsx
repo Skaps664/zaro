@@ -5,7 +5,19 @@ import { Button } from "@/components/ui/button"
 import { ArrowRight } from "lucide-react"
 import { AnimatedText } from "@/components/animated-text"
 
-export function HeroSection() {
+type HeroSectionProps = {
+  heroImageUrl?: string
+  titleLine1?: string
+  titleLine2?: string
+  subtitle?: string
+}
+
+export function HeroSection({
+  heroImageUrl = "/zaru-hero-2.png",
+  titleLine1 = "Premium Fragrance",
+  titleLine2 = "Perfected for You",
+  subtitle = "High-accuracy fragrance impressions with enhanced longevity. Luxury at a smart price point.",
+}: HeroSectionProps) {
   const sectionRef = useRef<HTMLElement>(null)
   const imageContainerRef = useRef<HTMLDivElement>(null)
   const [scrollProgress, setScrollProgress] = useState(0)
@@ -61,7 +73,7 @@ export function HeroSection() {
         }}
       >
         <img
-          src="/zaru-hero-2.png"
+          src={heroImageUrl}
           alt="Luxury ZARU perfume bottles"
           className="w-full h-full object-cover animate-zoom-in"
         />
@@ -77,22 +89,20 @@ export function HeroSection() {
           </p>
           <h1 className="font-serif font-medium leading-[1.1] text-background mb-8">
             <span className="block text-4xl md:hidden">
-              <span className="block whitespace-nowrap">Premium</span>
-              <span className="block whitespace-nowrap">Fragrance</span>
-              <span className="block text-accent whitespace-nowrap">Perfected</span>
-              <span className="block text-accent whitespace-nowrap">for You</span>
+              <span className="block whitespace-nowrap">{titleLine1}</span>
+              <span className="block text-accent whitespace-nowrap">{titleLine2}</span>
             </span>
 
             <span className="hidden md:block text-balance text-5xl lg:text-6xl xl:text-7xl">
-              <AnimatedText text="Premium Fragrance" delay={0.2} />
+              <AnimatedText text={titleLine1} delay={0.2} />
               <br />
               <span className="text-accent">
-                <AnimatedText text="Perfected for You" delay={0.6} />
+                <AnimatedText text={titleLine2} delay={0.6} />
               </span>
             </span>
           </h1>
           <p className="reveal opacity-0 animation-delay-400 text-lg text-background/90 leading-relaxed mb-10 md:text-base mr-0 pr-0">
-            High-accuracy fragrance impressions with enhanced longevity. Luxury at a smart price point.
+            {subtitle}
           </p>
           <div className="flex flex-col sm:flex-row gap-4">
             <Button

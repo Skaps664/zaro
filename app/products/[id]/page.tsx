@@ -4,20 +4,22 @@ import { notFound } from "next/navigation"
 import { ArrowLeft, Clock3, Sparkles, Target, Users } from "lucide-react"
 import { Header } from "@/components/header"
 import { Footer } from "@/components/footer"
-import { Button } from "@/components/ui/button"
-import { getProductById, products } from "@/lib/products"
+import { ProductDetailActions } from "@/components/product-detail-actions"
+import { ProductImageGallery } from "@/components/product-image-gallery"
+import { ProductVideoSection } from "@/components/product-video-section"
+import { getCatalogProductById, getCatalogProducts } from "@/lib/storefront-data"
+import { getProductPrice } from "@/lib/products"
+
+export const dynamic = "force-dynamic"
+export const revalidate = 0
 
 type ProductPageProps = {
   params: Promise<{ id: string }>
 }
 
-export async function generateStaticParams() {
-  return products.map((product) => ({ id: product.id }))
-}
-
 export async function generateMetadata({ params }: ProductPageProps): Promise<Metadata> {
   const { id } = await params
-  const product = getProductById(id)
+  const product = await getCatalogProductById(id)
 
   if (!product) {
     return {
@@ -33,13 +35,22 @@ export async function generateMetadata({ params }: ProductPageProps): Promise<Me
 
 export default async function ProductDetailPage({ params }: ProductPageProps) {
   const { id } = await params
-  const product = getProductById(id)
+  const product = await getCatalogProductById(id)
 
   if (!product) {
     notFound()
   }
 
-  const related = products.filter((item) => item.id !== product.id).slice(0, 3)
+  const catalog = await getCatalogProducts()
+  const related = catalog.filter((item) => item.id !== product.id).slice(0, 3)
+  const productPrice = typeof product.price === "number" ? product.price : getProductPrice(product.id)
+
+  const formatCurrency = (value: number) =>
+    new Intl.NumberFormat("en-PK", {
+      style: "currency",
+      currency: "PKR",
+      maximumFractionDigits: 0,
+    }).format(value)
 
   return (
     <main className="min-h-screen bg-background">
@@ -53,9 +64,7 @@ export default async function ProductDetailPage({ params }: ProductPageProps) {
           </Link>
 
           <div className="grid lg:grid-cols-2 gap-8 lg:gap-12 items-start">
-            <div className="rounded-3xl overflow-hidden border border-border/60 bg-muted">
-              <img src={product.image} alt={product.name} className="w-full h-full object-cover aspect-[4/5]" />
-            </div>
+            <ProductImageGallery name={product.name} images={product.images} fallbackImage={product.image} />
 
             <div>
               <p className="inline-flex rounded-full border border-border px-3 py-1 text-xs tracking-[0.16em] uppercase text-secondary mb-4">
@@ -63,6 +72,7 @@ export default async function ProductDetailPage({ params }: ProductPageProps) {
               </p>
               <h1 className="font-serif text-4xl md:text-5xl text-foreground mb-3 text-balance">{product.name}</h1>
               <p className="text-base md:text-lg text-muted-foreground mb-6">Inspired by {product.inspiredBy}</p>
+              <p className="text-3xl font-semibold text-foreground mb-6">{formatCurrency(productPrice)}</p>
               <p className="text-muted-foreground leading-relaxed mb-8">{product.description}</p>
 
               <div className="grid sm:grid-cols-2 gap-3 mb-8">
@@ -103,18 +113,13 @@ export default async function ProductDetailPage({ params }: ProductPageProps) {
                 </div>
               </div>
 
-              <div className="flex flex-wrap gap-3">
-                <Button size="lg" className="rounded-full px-8">
-                  Order on WhatsApp
-                </Button>
-                <Link href="/products">
-                  <Button size="lg" variant="outline" className="rounded-full px-8 bg-transparent">
-                    Explore all fragrances
-                  </Button>
-                </Link>
-              </div>
+              <ProductDetailActions
+                product={{ id: product.id, name: product.name, image: product.image, price: product.price }}
+              />
             </div>
           </div>
+
+          <ProductVideoSection product={product} />
 
           <div className="mt-14 lg:mt-20">
             <h3 className="font-serif text-3xl text-foreground mb-6">You may also like</h3>
@@ -122,11 +127,18 @@ export default async function ProductDetailPage({ params }: ProductPageProps) {
               {related.map((item) => (
                 <Link key={item.id} href={`/products/${item.id}`} className="group rounded-2xl border border-border/60 bg-card overflow-hidden">
                   <div className="aspect-[4/3] bg-muted overflow-hidden">
-                    <img src={item.image} alt={item.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                    <img
+                      src={item.images?.[0] ?? item.image}
+                      alt={item.name}
+                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                    />
                   </div>
                   <div className="p-4">
                     <p className="font-medium text-foreground mb-1">{item.name.replace("ZARU ", "")}</p>
                     <p className="text-sm text-muted-foreground">Inspired by {item.inspiredBy}</p>
+                    <p className="text-sm font-semibold text-foreground mt-2">
+                      {formatCurrency(typeof item.price === "number" ? item.price : getProductPrice(item.id))}
+                    </p>
                   </div>
                 </Link>
               ))}

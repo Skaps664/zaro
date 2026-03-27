@@ -1,4 +1,5 @@
 import { StaticPageLayout } from "@/components/static-page-layout"
+import { SITE_CONTACT } from "@/lib/site-contact"
 
 export const metadata = {
   title: "Terms of Sale | ZARU",
@@ -25,7 +26,9 @@ export default function TermsOfSalePage() {
 
         <section>
           <h2 className="font-medium text-lg mb-2">Returns and Support</h2>
-          <p className="text-muted-foreground leading-relaxed">If there is a delivery or quality issue, contact support promptly at hello@zaru.com so our team can assist you.</p>
+          <p className="text-muted-foreground leading-relaxed">
+            If there is a delivery or quality issue, contact support promptly at {SITE_CONTACT.email} so our team can assist you.
+          </p>
         </section>
       </div>
     </StaticPageLayout>

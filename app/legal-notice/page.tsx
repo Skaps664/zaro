@@ -1,4 +1,5 @@
 import { StaticPageLayout } from "@/components/static-page-layout"
+import { SITE_CONTACT } from "@/lib/site-contact"
 
 export const metadata = {
   title: "Legal Notice | ZARU",
@@ -25,7 +26,7 @@ export default function LegalNoticePage() {
 
         <section>
           <h2 className="font-medium text-lg mb-2">Contact</h2>
-          <p className="text-muted-foreground">For legal queries: hello@zaru.com</p>
+          <p className="text-muted-foreground">For legal queries: {SITE_CONTACT.email}</p>
         </section>
       </div>
     </StaticPageLayout>

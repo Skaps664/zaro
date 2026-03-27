@@ -2,7 +2,8 @@
 
 import { useState } from "react"
 import Link from "next/link"
-import { Menu, ShoppingBag, User, X } from "lucide-react"
+import { Menu, User, X } from "lucide-react"
+import { CartButton } from "@/components/cart-button"
 
 export function Header() {
   const [isOpen, setIsOpen] = useState(false)
@@ -22,6 +23,7 @@ export function Header() {
               <Link href="/products" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
                 All Products
               </Link>
+
               <Link href="/#fragrances" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
                 Hero Picks
               </Link>
@@ -29,19 +31,16 @@ export function Header() {
 
             <div className="flex items-center gap-2 pl-4 border-l border-border/60">
               <Link
-                href="/"
+                href="/account"
                 aria-label="Account"
                 className="w-10 h-10 rounded-full border border-border/60 hover:bg-muted/60 transition-colors flex items-center justify-center"
               >
                 <User className="w-5 h-5" />
               </Link>
-              <Link
-                href="/products"
-                aria-label="Cart"
-                className="w-10 h-10 rounded-full border border-border/60 hover:bg-muted/60 transition-colors flex items-center justify-center"
-              >
-                <ShoppingBag className="w-5 h-5" />
-              </Link>
+              <CartButton
+                label="Cart"
+                className="relative w-10 h-10 rounded-full border border-border/60 hover:bg-muted/60 transition-colors flex items-center justify-center"
+              />
             </div>
           </div>
 
@@ -62,6 +61,7 @@ export function Header() {
               >
                 Products
               </Link>
+
               <Link
                 href="/#fragrances"
                 className="text-lg text-muted-foreground hover:text-foreground transition-colors"
@@ -70,21 +70,19 @@ export function Header() {
                 Hero Picks
               </Link>
               <Link
-                href="/"
+                href="/account"
                 className="text-lg text-muted-foreground hover:text-foreground transition-colors flex items-center gap-3"
                 onClick={() => setIsOpen(false)}
               >
                 <User className="w-5 h-5" />
                 Account
               </Link>
-              <Link
-                href="/products"
-                className="text-lg text-muted-foreground hover:text-foreground transition-colors flex items-center gap-3"
+              <CartButton
+                label="Open cart"
+                className="relative text-lg text-muted-foreground hover:text-foreground transition-colors flex items-center gap-3 text-left"
                 onClick={() => setIsOpen(false)}
-              >
-                <ShoppingBag className="w-5 h-5" />
-                Cart
-              </Link>
+                showText
+              />
             </div>
           </div>
         )}

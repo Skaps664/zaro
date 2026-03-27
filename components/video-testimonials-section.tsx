@@ -4,45 +4,50 @@ import { useEffect, useRef } from "react"
 import { Button } from "@/components/ui/button"
 import { ChevronLeft, ChevronRight, Play } from "lucide-react"
 
-const videoReviews = [
+type VideoReview = {
+  id: string
+  name: string
+  duration: string
+  title: string
+  thumbnail: string
+  videoUrl?: string
+}
+
+type VideoTestimonialsSectionProps = {
+  heading?: string
+  subheading?: string
+  videos?: VideoReview[]
+}
+
+const defaultReviews: VideoReview[] = [
   {
-    id: 1,
+    id: "review-1",
     name: "Ayaan",
     duration: "0:42",
     title: "Victory Crown Reaction",
     thumbnail: "/images/fragrance-victory-crown.jpg",
   },
   {
-    id: 2,
+    id: "review-2",
     name: "Lina",
     duration: "0:55",
     title: "Wild Storm First Wear",
     thumbnail: "/images/fragrance-wild-storm.jpg",
   },
   {
-    id: 3,
+    id: "review-3",
     name: "Ravi",
     duration: "0:38",
     title: "Blue Legacy Compliments",
     thumbnail: "/images/fragrance-blue-legacy.jpg",
   },
-  {
-    id: 4,
-    name: "Mariam",
-    duration: "1:03",
-    title: "Longevity Check",
-    thumbnail: "/images/mission-luxury-scent.jpg",
-  },
-  {
-    id: 5,
-    name: "Kabir",
-    duration: "0:47",
-    title: "Daily Rotation Pick",
-    thumbnail: "/images/hero-zaru.jpg",
-  },
 ]
 
-export function VideoTestimonialsSection() {
+export function VideoTestimonialsSection({
+  heading = "Video Reviews",
+  subheading = "Here's what our customer think about our products",
+  videos = defaultReviews,
+}: VideoTestimonialsSectionProps) {
   const sectionRef = useRef<HTMLDivElement>(null)
   const videoScrollRef = useRef<HTMLDivElement>(null)
 
@@ -78,15 +83,15 @@ export function VideoTestimonialsSection() {
   return (
     <div ref={sectionRef} className="mt-16 px-6 lg:px-8 pb-8">
       <div className="reveal opacity-0 text-center mb-8">
-        <p className="text-sm uppercase tracking-[0.2em] text-secondary font-medium mb-3">Video Reviews</p>
-        <h3 className="font-serif text-2xl md:text-3xl text-foreground">Here's what our customer think about our products</h3>
+        <p className="text-sm uppercase tracking-[0.2em] text-secondary font-medium mb-3">{heading}</p>
+        <h3 className="font-serif text-2xl md:text-3xl text-foreground">{subheading}</h3>
       </div>
 
       <div
         ref={videoScrollRef}
         className="flex gap-4 overflow-x-auto snap-x snap-mandatory scrollbar-hide lg:grid lg:grid-cols-5 lg:gap-5 lg:overflow-visible"
       >
-        {videoReviews.map((review, index) => (
+        {videos.map((review, index) => (
           <article
             key={review.id}
             className={`reveal opacity-0 ${index === 1 ? "animation-delay-200" : index === 2 ? "animation-delay-400" : index === 3 ? "animation-delay-600" : index === 4 ? "animation-delay-800" : ""} min-w-[74vw] sm:min-w-[52vw] md:min-w-[36vw] lg:min-w-0 snap-center rounded-2xl border border-border/50 overflow-hidden bg-card shadow-lg shadow-primary/5 hover:shadow-xl hover:shadow-primary/10 transition-all duration-500 group`}
@@ -101,11 +106,24 @@ export function VideoTestimonialsSection() {
               <span className="absolute top-3 right-3 bg-background/90 text-foreground text-xs font-medium px-2 py-1 rounded-full">
                 {review.duration}
               </span>
-              <span className="absolute inset-0 flex items-center justify-center">
-                <span className="w-12 h-12 rounded-full bg-background/85 text-foreground flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
-                  <Play className="w-5 h-5 ml-0.5" fill="currentColor" />
+              {review.videoUrl ? (
+                <a
+                  href={review.videoUrl}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="absolute inset-0 flex items-center justify-center"
+                >
+                  <span className="w-12 h-12 rounded-full bg-background/85 text-foreground flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
+                    <Play className="w-5 h-5 ml-0.5" fill="currentColor" />
+                  </span>
+                </a>
+              ) : (
+                <span className="absolute inset-0 flex items-center justify-center">
+                  <span className="w-12 h-12 rounded-full bg-background/85 text-foreground flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
+                    <Play className="w-5 h-5 ml-0.5" fill="currentColor" />
+                  </span>
                 </span>
-              </span>
+              )}
             </div>
             <div className="p-4">
               <p className="font-medium text-foreground text-sm mb-1">{review.title}</p>

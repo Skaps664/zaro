@@ -13,7 +13,21 @@ const missionContent = {
   cta: "Start exploring",
 }
 
-export function MissionSection() {
+type MissionSectionProps = {
+  imageUrl?: string
+  eyebrow?: string
+  title?: string
+  paragraph?: string
+  cta?: string
+}
+
+export function MissionSection({
+  imageUrl = "/images/mission-luxury-scent.jpg",
+  eyebrow = missionContent.eyebrow,
+  title = missionContent.title,
+  paragraph = missionContent.paragraphs[0],
+  cta = missionContent.cta,
+}: MissionSectionProps) {
   const sectionRef = useRef<HTMLElement>(null)
 
   useEffect(() => {
@@ -39,7 +53,7 @@ export function MissionSection() {
       <div className="relative max-w-7xl mx-auto rounded-[48px] overflow-hidden min-h-[560px] md:min-h-[640px] lg:min-h-[700px]">
         {/* Background Image */}
         <div className="absolute inset-0">
-          <img src="/images/mission-luxury-scent.jpg" alt="ZARU luxury fragrance lifestyle" className="w-full h-full object-cover" />
+          <img src={imageUrl} alt="ZARU luxury fragrance lifestyle" className="w-full h-full object-cover" />
           {/* Dark overlay for text readability */}
           <div className="absolute inset-0 bg-foreground/50" />
 
@@ -57,22 +71,20 @@ export function MissionSection() {
             {/* Content */}
             <div className="order-1 lg:order-2 flex flex-col justify-center text-center lg:text-left max-w-2xl mx-auto lg:mx-0">
               <p className="reveal opacity-0 text-sm uppercase tracking-[0.2em] text-accent font-medium mb-4">
-                {missionContent.eyebrow}
+                {eyebrow}
               </p>
               <h2 className="reveal opacity-0 animation-delay-200 font-serif text-3xl md:text-4xl lg:text-5xl font-medium text-background text-balance mb-8">
-                {missionContent.title}
+                {title}
               </h2>
               <div className="reveal opacity-0 animation-delay-400 space-y-6 text-background/90 leading-relaxed">
-                {missionContent.paragraphs.map((paragraph) => (
-                  <p key={paragraph}>{paragraph}</p>
-                ))}
+                <p>{paragraph}</p>
               </div>
               <div className="reveal opacity-0 animation-delay-600 mt-10 flex justify-center lg:justify-start">
                 <Button
                   size="lg"
                   className="bg-background text-foreground hover:bg-background/90 rounded-full px-8 group"
                 >
-                  {missionContent.cta}
+                  {cta}
                   <ArrowRight className="ml-2 w-4 h-4 group-hover:translate-x-1 transition-transform" />
                 </Button>
               </div>

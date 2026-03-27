@@ -1,4 +1,5 @@
 import { StaticPageLayout } from "@/components/static-page-layout"
+import { SITE_CONTACT } from "@/lib/site-contact"
 
 export const metadata = {
   title: "Contact | ZARU",
@@ -15,8 +16,9 @@ export default function ContactPage() {
       <div className="space-y-6 text-foreground">
         <section>
           <h2 className="font-medium text-lg mb-2">Customer Support</h2>
-          <p className="text-muted-foreground">Email: hello@zaru.com</p>
-          <p className="text-muted-foreground">Phone: +1 (555) 123-4567</p>
+          <p className="text-muted-foreground">Email: {SITE_CONTACT.email}</p>
+          <p className="text-muted-foreground">Phone: {SITE_CONTACT.phone}</p>
+          <p className="text-muted-foreground">WhatsApp: {SITE_CONTACT.whatsapp}</p>
         </section>
 
         <section>
@@ -27,7 +29,7 @@ export default function ContactPage() {
 
         <section>
           <h2 className="font-medium text-lg mb-2">Location</h2>
-          <p className="text-muted-foreground">Karachi, Pakistan</p>
+          <p className="text-muted-foreground">{SITE_CONTACT.location}</p>
         </section>
       </div>
     </StaticPageLayout>

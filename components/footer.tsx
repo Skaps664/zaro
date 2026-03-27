@@ -1,5 +1,6 @@
 import Link from "next/link"
 import { Mail, MapPin, Phone } from "lucide-react"
+import { SITE_CONTACT } from "@/lib/site-contact"
 
 const footerLinks = {
   fragrances: [
@@ -38,15 +39,15 @@ export function Footer() {
             <div className="space-y-3 text-sm text-background/70">
               <div className="flex items-center gap-3">
                 <Mail className="w-4 h-4" />
-                <span>hello@zaru.com</span>
+                <span>{SITE_CONTACT.email}</span>
               </div>
               <div className="flex items-center gap-3">
                 <Phone className="w-4 h-4" />
-                <span>+1 (555) 123-4567</span>
+                <span>{SITE_CONTACT.phone}</span>
               </div>
               <div className="flex items-center gap-3">
                 <MapPin className="w-4 h-4" />
-                <span>Karachi, Pakistan</span>
+                <span>{SITE_CONTACT.location}</span>
               </div>
             </div>
           </div>

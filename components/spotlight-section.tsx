@@ -3,7 +3,21 @@
 import { useEffect, useRef } from "react"
 import { Button } from "@/components/ui/button"
 
-export function SpotlightSection() {
+type SpotlightSectionProps = {
+  imageUrl?: string
+  subtitle?: string
+  title?: string
+  paragraph1?: string
+  paragraph2?: string
+}
+
+export function SpotlightSection({
+  imageUrl = "/sope.jpg",
+  subtitle = "Inside ZARU",
+  title = "Crafted for presence, designed for everyday wear",
+  paragraph1 = "Every bottle is blended to capture the spirit of iconic fragrances while staying wearable, modern, and distinctly yours.",
+  paragraph2 = "From first spray to dry-down, ZARU balances richness and clarity so your scent feels premium from morning to night.",
+}: SpotlightSectionProps) {
   const sectionRef = useRef<HTMLElement>(null)
 
   useEffect(() => {
@@ -31,7 +45,7 @@ export function SpotlightSection() {
           <div className="reveal opacity-0 animation-delay-200 order-2 lg:order-1">
             <div className="rounded-3xl overflow-hidden border border-border/50 shadow-xl shadow-primary/10">
               <img
-                src="/sope.jpg"
+                src={imageUrl}
                 alt="Luxury fragrance experience"
                 className="w-full h-[380px] md:h-[460px] object-cover"
               />
@@ -39,15 +53,15 @@ export function SpotlightSection() {
           </div>
 
           <div className="order-1 lg:order-2">
-            <p className="reveal opacity-0 text-sm uppercase tracking-[0.2em] text-secondary font-medium mb-4">Inside ZARU</p>
+            <p className="reveal opacity-0 text-sm uppercase tracking-[0.2em] text-secondary font-medium mb-4">{subtitle}</p>
             <h2 className="reveal opacity-0 animation-delay-200 font-serif text-3xl md:text-4xl lg:text-5xl text-foreground mb-6 text-balance">
-              Crafted for presence, designed for everyday wear
+              {title}
             </h2>
             <p className="reveal opacity-0 animation-delay-400 text-muted-foreground leading-relaxed mb-4">
-              Every bottle is blended to capture the spirit of iconic fragrances while staying wearable, modern, and distinctly yours.
+              {paragraph1}
             </p>
             <p className="reveal opacity-0 animation-delay-600 text-muted-foreground leading-relaxed mb-8">
-              From first spray to dry-down, ZARU balances richness and clarity so your scent feels premium from morning to night.
+              {paragraph2}
             </p>
             <div className="reveal opacity-0 animation-delay-800">
               <Button size="lg" className="rounded-full px-8">
