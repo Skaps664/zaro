@@ -33,9 +33,13 @@ export function HeroProductSection({
   }
 
   const salePercent = Number.isFinite(discountPercentage) ? Math.max(0, Math.min(90, Math.round(discountPercentage))) : 0
-  const sellingPrice = typeof product.price === "number" ? product.price : 3490
-  const originalPrice = salePercent > 0 ? Math.round(sellingPrice / (1 - salePercent / 100)) : null
+  const basePrice = typeof product.price === "number" ? product.price : 3490
+  const sellingPrice = salePercent > 0 ? Math.max(0, Math.round(basePrice * (1 - salePercent / 100))) : basePrice
+  const originalPrice = salePercent > 0 ? basePrice : null
   const displayImage = imageUrl || product.images?.[0] || product.image
+  const sectionEyebrow = eyebrow?.trim() || "Sale Product Section"
+  const sectionTitle = title?.trim() || "One signature scent, made to stand out"
+  const sectionSubtitle = subtitle?.trim() || "Limited-time offer on our handpicked fragrance."
 
   const formattedSelling = useMemo(
     () =>
@@ -85,6 +89,16 @@ export function HeroProductSection({
   return (
     <section className="py-20 lg:py-24 bg-background">
       <div className="max-w-7xl mx-auto px-6 lg:px-8">
+        <div className="text-center mb-10 lg:mb-12">
+          <p className="text-sm uppercase tracking-[0.2em] text-secondary font-medium mb-4">Flash Sale</p>
+          <h2 className="font-serif text-3xl text-foreground text-balance mb-4 md:text-6xl font-light">
+            Limited-Time Signature Drop
+          </h2>
+          <p className="text-lg text-muted-foreground max-w-2xl mx-auto leading-relaxed">
+            Discover standout fragrances at exclusive prices.
+          </p>
+        </div>
+
         <div className="grid lg:grid-cols-2 gap-8 lg:gap-12 items-center rounded-3xl border border-border/60 bg-card p-6 md:p-8 lg:p-10">
           <div className="relative overflow-hidden rounded-2xl border border-border/60 bg-muted">
             <img src={displayImage} alt={product.name} className="w-full h-[380px] md:h-[460px] object-cover" loading="lazy" decoding="async" />
@@ -96,9 +110,16 @@ export function HeroProductSection({
           </div>
 
           <div>
-            <p className="text-sm uppercase tracking-[0.2em] text-secondary font-medium mb-3">{eyebrow}</p>
-            <h2 className="font-serif text-3xl md:text-4xl text-foreground mb-3 text-balance">{title}</h2>
-            <p className="text-muted-foreground leading-relaxed mb-6">{subtitle}</p>
+            <div className="flex flex-wrap items-center gap-2 mb-3">
+              <span className="rounded-full bg-primary px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.08em] text-primary-foreground">
+                Flash Sale
+              </span>
+              <span className="rounded-full border border-border/70 bg-background px-3 py-1 text-[11px] font-medium uppercase tracking-[0.08em] text-foreground">
+                {sectionEyebrow}
+              </span>
+            </div>
+            <h2 className="font-serif text-3xl md:text-4xl text-foreground mb-3 text-balance">{sectionTitle}</h2>
+            <p className="text-muted-foreground leading-relaxed mb-6">{sectionSubtitle}</p>
 
             <p className="text-sm text-muted-foreground mb-1">{product.name}</p>
             <div className="flex items-end gap-3 mb-6">

@@ -31,6 +31,13 @@ type SiteSettings = {
   heroSingleImageUrl: string
   heroSingleDiscountPercentage: number
   heroSingleProductId: string
+  bundleSectionEyebrow: string
+  bundleSectionTitle: string
+  bundleSectionSubtitle: string
+  bundleFirstProductId: string
+  bundleSecondProductId: string
+  bundleCustomPrice: number
+  bundleDiscountPercentage: number
 }
 
 type ProductRow = {
@@ -127,6 +134,13 @@ const defaultSettings: SiteSettings = {
   heroSingleImageUrl: "",
   heroSingleDiscountPercentage: 20,
   heroSingleProductId: featuredProducts[0]?.id ?? "",
+  bundleSectionEyebrow: "Bundle Offer",
+  bundleSectionTitle: "Pair your favorites and save more",
+  bundleSectionSubtitle: "Choose two bestsellers as one bundle with a custom deal price.",
+  bundleFirstProductId: "",
+  bundleSecondProductId: "",
+  bundleCustomPrice: 0,
+  bundleDiscountPercentage: 0,
 }
 
 function normalizeVideoReviews(raw: unknown) {
@@ -170,6 +184,30 @@ function getStorefrontServerClient() {
   return getSupabaseServerAdminClient() ?? getSupabaseServerAnonClient()
 }
 
+function normalizeIdentifier(value: string) {
+  return value
+    .trim()
+    .toLowerCase()
+    .replace(/[\s_-]+/g, "-")
+    .replace(/-+/g, "-")
+}
+
+function buildIdentifierCandidates(value: string) {
+  const decoded = (() => {
+    try {
+      return decodeURIComponent(value)
+    } catch {
+      return value
+    }
+  })()
+
+  return new Set([
+    normalizeIdentifier(value),
+    normalizeIdentifier(decoded),
+    normalizeIdentifier(decoded.replace(/\+/g, " ")),
+  ])
+}
+
 export async function getSiteSettings(): Promise<SiteSettings> {
   const supabase = getStorefrontServerClient()
   if (!supabase) return defaultSettings
@@ -211,6 +249,16 @@ export async function getSiteSettings(): Promise<SiteSettings> {
         ? data.hero_single_discount_percentage
         : defaultSettings.heroSingleDiscountPercentage,
     heroSingleProductId: data.hero_single_product_id || defaultSettings.heroSingleProductId,
+    bundleSectionEyebrow: data.bundle_section_eyebrow || defaultSettings.bundleSectionEyebrow,
+    bundleSectionTitle: data.bundle_section_title || defaultSettings.bundleSectionTitle,
+    bundleSectionSubtitle: data.bundle_section_subtitle || defaultSettings.bundleSectionSubtitle,
+    bundleFirstProductId: data.bundle_first_product_id || defaultSettings.bundleFirstProductId,
+    bundleSecondProductId: data.bundle_second_product_id || defaultSettings.bundleSecondProductId,
+    bundleCustomPrice: typeof data.bundle_custom_price === "number" ? data.bundle_custom_price : defaultSettings.bundleCustomPrice,
+    bundleDiscountPercentage:
+      typeof data.bundle_discount_percentage === "number"
+        ? data.bundle_discount_percentage
+        : defaultSettings.bundleDiscountPercentage,
   }
 }
 
@@ -257,7 +305,18 @@ export async function getFeaturedCatalogProducts(limit = 3): Promise<Product[]> 
 
 export async function getCatalogProductById(id: string): Promise<Product | undefined> {
   const catalog = await getCatalogProducts()
-  return catalog.find((item) => item.id === id)
+
+  const exactMatch = catalog.find((item) => item.id === id)
+  if (exactMatch) return exactMatch
+
+  const requestedCandidates = buildIdentifierCandidates(id)
+
+  return catalog.find((item) => {
+    const idCandidates = buildIdentifierCandidates(item.id)
+    const nameCandidates = buildIdentifierCandidates(item.name.replace(/^zaru\s+/i, ""))
+
+    return [...requestedCandidates].some((candidate) => idCandidates.has(candidate) || nameCandidates.has(candidate))
+  })
 }
 
 export async function getHeroSingleProduct(): Promise<Product | undefined> {

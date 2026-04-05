@@ -29,9 +29,11 @@ export function CartDrawer() {
     detailedItems,
     cartCount,
     totalAmount,
+    featuredDropDiscountAmount,
     removeItem,
     updateQuantity,
   } = useCart()
+  const subtotalBeforeFeaturedDiscount = totalAmount + featuredDropDiscountAmount
 
   return (
     <Sheet open={isCartOpen} onOpenChange={(open) => (open ? undefined : closeCart())}>
@@ -66,7 +68,16 @@ export function CartDrawer() {
                     <img src={item.image} alt={item.name} className="h-20 w-20 rounded-xl object-cover bg-muted" />
                     <div className="min-w-0 flex-1">
                       <p className="font-medium text-foreground truncate">{item.name}</p>
-                      <p className="text-sm text-muted-foreground">{formatCurrency(item.price)} each</p>
+                      <p className="text-sm text-muted-foreground">
+                        {typeof item.originalPrice === "number" && item.originalPrice > item.price ? (
+                          <>
+                            <span className="line-through mr-1">{formatCurrency(item.originalPrice)}</span>
+                            <span className="text-primary font-medium">{formatCurrency(item.price)} each</span>
+                          </>
+                        ) : (
+                          `${formatCurrency(item.price)} each`
+                        )}
+                      </p>
                       <p className="text-sm text-foreground mt-1">{formatCurrency(item.lineTotal)}</p>
 
                       <div className="mt-3 flex items-center justify-between">
@@ -108,6 +119,16 @@ export function CartDrawer() {
               <div className="w-full space-y-4">
                 <div className="flex items-center justify-between text-base">
                   <span className="text-muted-foreground">Subtotal</span>
+                  <span className="font-semibold text-foreground">{formatCurrency(subtotalBeforeFeaturedDiscount)}</span>
+                </div>
+                {featuredDropDiscountAmount > 0 && (
+                  <div className="flex items-center justify-between text-sm">
+                    <span className="text-muted-foreground">Featured Drop Discount Applied</span>
+                    <span className="text-primary font-medium">- {formatCurrency(featuredDropDiscountAmount)}</span>
+                  </div>
+                )}
+                <div className="flex items-center justify-between text-base">
+                  <span className="text-muted-foreground">Total</span>
                   <span className="font-semibold text-foreground">{formatCurrency(totalAmount)}</span>
                 </div>
 

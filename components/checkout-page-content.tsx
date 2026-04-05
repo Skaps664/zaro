@@ -34,9 +34,42 @@ const PAYMENT_DETAILS = {
   whatsapp: SITE_CONTACT.whatsapp,
 }
 
+const SHIPPING_CHARGE = 200
+
+function getAdvancePaymentDetails(method: string) {
+  if (method === "EasyPaisa") {
+    return {
+      title: "EasyPaisa",
+      lines: [
+        { label: "Account title", value: PAYMENT_DETAILS.accountTitle },
+        { label: "EasyPaisa number", value: PAYMENT_DETAILS.easypaisa },
+      ],
+    }
+  }
+
+  if (method === "JazzCash") {
+    return {
+      title: "JazzCash",
+      lines: [
+        { label: "Account title", value: PAYMENT_DETAILS.accountTitle },
+        { label: "JazzCash number", value: PAYMENT_DETAILS.jazzcash },
+      ],
+    }
+  }
+
+  return {
+    title: "Bank Transfer",
+    lines: [
+      { label: "Bank", value: PAYMENT_DETAILS.bankName },
+      { label: "Account title", value: PAYMENT_DETAILS.accountTitle },
+      { label: "Account number", value: PAYMENT_DETAILS.accountNumber },
+    ],
+  }
+}
+
 export function CheckoutPageContent() {
   const router = useRouter()
-  const { detailedItems, cartCount, totalAmount, clearCart, updateQuantity, removeItem } = useCart()
+  const { detailedItems, cartCount, totalAmount, featuredDropDiscountAmount, clearCart, updateQuantity, removeItem } = useCart()
   const [fullName, setFullName] = useState("")
   const [phone, setPhone] = useState("")
   const [city, setCity] = useState("")
@@ -68,7 +101,12 @@ export function CheckoutPageContent() {
     return Math.round(totalAmount * 0.1)
   }, [paymentType, totalAmount])
 
-  const payableAmount = useMemo(() => totalAmount - discountAmount, [discountAmount, totalAmount])
+  const subtotalBeforeFeaturedDiscount = useMemo(
+    () => totalAmount + featuredDropDiscountAmount,
+    [featuredDropDiscountAmount, totalAmount],
+  )
+  const payableAmount = useMemo(() => totalAmount - discountAmount + SHIPPING_CHARGE, [discountAmount, totalAmount])
+  const selectedAdvanceMethod = useMemo(() => getAdvancePaymentDetails(paymentMethod), [paymentMethod])
 
   const onSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault()
@@ -107,6 +145,7 @@ export function CheckoutPageContent() {
           totalItems: cartCount,
           subtotalAmount: totalAmount,
           discountAmount,
+          shippingAmount: SHIPPING_CHARGE,
           payableAmount,
           totalAmount,
           whatsapp: PAYMENT_DETAILS.whatsapp,
@@ -133,6 +172,7 @@ export function CheckoutPageContent() {
         `Total Items: ${cartCount}`,
         `Subtotal: PKR ${totalAmount}`,
         `Discount: PKR ${discountAmount}`,
+        `Shipping: PKR ${SHIPPING_CHARGE}`,
         `Payable Amount: PKR ${payableAmount}`,
         `Items: ${orderItems.map((item) => `${item.name} x${item.quantity} = PKR ${item.lineTotal}`).join(" | ")}`,
         `Notes: ${notes.trim() || "N/A"}`,
@@ -230,7 +270,7 @@ export function CheckoutPageContent() {
           </p>
           <h1 className="font-serif text-4xl md:text-5xl text-foreground mb-3">Complete Your Order</h1>
           <p className="text-muted-foreground max-w-2xl">
-            Place order now. Advance payment gets 10% off. Cash on Delivery has no discount. We will contact you for confirmation.
+            Place order now. Advance payment gets 10% off. Cash on Delivery has no discount. Shipping is PKR 200 for all orders.
           </p>
         </div>
 
@@ -322,22 +362,38 @@ export function CheckoutPageContent() {
             </div>
 
             {paymentType === "advance" && (
-              <div className="grid gap-4 sm:grid-cols-2">
-                <select
-                  value={paymentMethod}
-                  onChange={(event) => setPaymentMethod(event.target.value)}
-                  className="h-11 rounded-xl border border-border/70 bg-background px-3 text-sm"
-                >
-                  <option>Bank Transfer</option>
-                  <option>EasyPaisa</option>
-                  <option>JazzCash</option>
-                </select>
-                <input
-                  value={paymentReference}
-                  onChange={(event) => setPaymentReference(event.target.value)}
-                  placeholder="Transaction reference (optional)"
-                  className="h-11 rounded-xl border border-border/70 bg-background px-3 text-sm"
-                />
+              <div className="space-y-3 rounded-2xl border border-primary/20 bg-primary/5 p-4">
+                <div className="grid gap-4 sm:grid-cols-2">
+                  <select
+                    value={paymentMethod}
+                    onChange={(event) => setPaymentMethod(event.target.value)}
+                    className="h-11 rounded-xl border border-border/70 bg-background px-3 text-sm"
+                  >
+                    <option>Bank Transfer</option>
+                    <option>EasyPaisa</option>
+                    <option>JazzCash</option>
+                  </select>
+                  <input
+                    value={paymentReference}
+                    onChange={(event) => setPaymentReference(event.target.value)}
+                    placeholder="Your Account Info (optional)"
+                    className="h-11 rounded-xl border border-border/70 bg-background px-3 text-sm"
+                  />
+                </div>
+
+                <div className="rounded-xl border border-primary/25 bg-background p-4">
+                  <p className="text-xs font-semibold uppercase tracking-[0.12em] text-primary mb-2">{selectedAdvanceMethod.title} account details</p>
+                  <div className="space-y-1.5 text-sm">
+                    {selectedAdvanceMethod.lines.map((line) => (
+                      <p key={line.label}>
+                        <span className="text-muted-foreground">{line.label}:</span> <span className="font-medium text-foreground">{line.value}</span>
+                      </p>
+                    ))}
+                    <p>
+                      <span className="text-muted-foreground">WhatsApp:</span> <span className="font-medium text-foreground">{PAYMENT_DETAILS.whatsapp}</span>
+                    </p>
+                  </div>
+                </div>
               </div>
             )}
 
@@ -347,6 +403,10 @@ export function CheckoutPageContent() {
               placeholder="Order note (optional)"
               className="min-h-20 w-full rounded-xl border border-border/70 bg-background px-3 py-2 text-sm"
             />
+
+            <p className="rounded-xl border border-border/70 bg-muted/40 px-4 py-3 text-sm text-muted-foreground">
+              After placing your order, our team will contact you on phone/WhatsApp to confirm your order.
+            </p>
 
             <Button type="submit" size="lg" className="w-full rounded-full" disabled={isSubmitting}>
               {isSubmitting ? "Submitting order..." : "Place order"}
@@ -396,56 +456,33 @@ export function CheckoutPageContent() {
               </div>
               <div className="flex items-center justify-between border-t border-border/70 pt-4 text-sm">
                 <span className="text-muted-foreground">Subtotal</span>
-                <span>{formatCurrency(totalAmount)}</span>
+                <span>{formatCurrency(subtotalBeforeFeaturedDiscount)}</span>
               </div>
+              {featuredDropDiscountAmount > 0 && (
+                <div className="flex items-center justify-between text-sm">
+                  <span className="text-muted-foreground">Featured Drop Discount</span>
+                  <span className="text-primary font-medium">- {formatCurrency(featuredDropDiscountAmount)}</span>
+                </div>
+              )}
               <div className="flex items-center justify-between text-sm">
-                <span className="text-muted-foreground">Discount</span>
+                <span className="text-muted-foreground">Advance Payment Discount (10%)</span>
                 <span className={paymentType === "advance" ? "text-primary font-medium" : "text-muted-foreground"}>
                   {paymentType === "advance" ? `- ${formatCurrency(discountAmount)} (10%)` : formatCurrency(0)}
                 </span>
+              </div>
+              <div className="flex items-center justify-between text-sm">
+                <span className="text-muted-foreground">Shipping</span>
+                <span>{formatCurrency(SHIPPING_CHARGE)}</span>
               </div>
               <div className="flex items-center justify-between border-t border-border/70 pt-4 text-base font-semibold">
                 <span>Payable</span>
                 <span>{formatCurrency(payableAmount)}</span>
               </div>
               <p className="mt-3 text-xs text-muted-foreground">
-                {paymentType === "advance" ? "Advance payment selected: 10% discount applied." : "Cash on Delivery selected: no discount."}
+                {paymentType === "advance"
+                  ? "Featured Drop discount (if applicable) and advance 10% discount are both applied, plus PKR 200 shipping."
+                  : "Cash on Delivery selected: no discount and PKR 200 shipping added."}
               </p>
-            </div>
-
-            <div className="rounded-3xl border border-border/60 bg-card p-6">
-              <h3 className="font-serif text-2xl text-foreground mb-4">Payment Information</h3>
-              {paymentType === "advance" ? (
-                <>
-                  <div className="space-y-3 text-sm">
-                    <p>
-                      <span className="text-muted-foreground">Bank:</span> {PAYMENT_DETAILS.bankName}
-                    </p>
-                    <p>
-                      <span className="text-muted-foreground">Account title:</span> {PAYMENT_DETAILS.accountTitle}
-                    </p>
-                    <p>
-                      <span className="text-muted-foreground">Account number:</span> {PAYMENT_DETAILS.accountNumber}
-                    </p>
-                    <p>
-                      <span className="text-muted-foreground">EasyPaisa:</span> {PAYMENT_DETAILS.easypaisa}
-                    </p>
-                    <p>
-                      <span className="text-muted-foreground">JazzCash:</span> {PAYMENT_DETAILS.jazzcash}
-                    </p>
-                    <p>
-                      <span className="text-muted-foreground">WhatsApp:</span> {PAYMENT_DETAILS.whatsapp}
-                    </p>
-                  </div>
-                  <p className="mt-4 text-sm text-muted-foreground">
-                    Transfer payment first, then send proof on WhatsApp. Your order will be confirmed manually after verification. Thank you.
-                  </p>
-                </>
-              ) : (
-                <p className="text-sm text-muted-foreground">
-                  Cash on Delivery selected. You will be contacted on phone/WhatsApp for confirmation before dispatch. Thank you.
-                </p>
-              )}
             </div>
           </aside>
         </div>

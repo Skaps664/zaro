@@ -14,7 +14,8 @@ function formatCurrency(value: number) {
 }
 
 export function CartPageContent() {
-  const { detailedItems, cartCount, totalAmount, removeItem, updateQuantity } = useCart()
+  const { detailedItems, cartCount, totalAmount, featuredDropDiscountAmount, removeItem, updateQuantity } = useCart()
+  const subtotalBeforeFeaturedDiscount = totalAmount + featuredDropDiscountAmount
 
   return (
     <section className="pt-32 pb-16 lg:pt-36 lg:pb-24">
@@ -47,7 +48,16 @@ export function CartPageContent() {
                     <img src={item.image} alt={item.name} className="h-24 w-24 rounded-xl object-cover" />
                     <div className="min-w-0 flex-1">
                       <p className="font-medium text-foreground truncate">{item.name}</p>
-                      <p className="text-sm text-muted-foreground">{formatCurrency(item.price)} each</p>
+                      <p className="text-sm text-muted-foreground">
+                        {typeof item.originalPrice === "number" && item.originalPrice > item.price ? (
+                          <>
+                            <span className="line-through mr-1">{formatCurrency(item.originalPrice)}</span>
+                            <span className="text-primary font-medium">{formatCurrency(item.price)} each</span>
+                          </>
+                        ) : (
+                          `${formatCurrency(item.price)} each`
+                        )}
+                      </p>
                       <p className="text-sm text-foreground mt-1">{formatCurrency(item.lineTotal)}</p>
 
                       <div className="mt-3 flex items-center justify-between">
@@ -91,6 +101,16 @@ export function CartPageContent() {
                 <span className="text-muted-foreground">Items</span>
                 <span>{cartCount}</span>
               </div>
+              <div className="flex items-center justify-between text-sm mb-2">
+                <span className="text-muted-foreground">Subtotal</span>
+                <span>{formatCurrency(subtotalBeforeFeaturedDiscount)}</span>
+              </div>
+              {featuredDropDiscountAmount > 0 && (
+                <div className="flex items-center justify-between text-sm mb-2">
+                  <span className="text-muted-foreground">Featured Drop Discount</span>
+                  <span className="text-primary font-medium">- {formatCurrency(featuredDropDiscountAmount)}</span>
+                </div>
+              )}
               <div className="flex items-center justify-between text-base font-semibold mb-6">
                 <span>Total</span>
                 <span>{formatCurrency(totalAmount)}</span>

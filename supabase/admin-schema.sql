@@ -50,7 +50,14 @@ create table if not exists public.site_settings (
   hero_single_subtitle text not null default 'Limited-time offer on our handpicked fragrance.',
   hero_single_image_url text not null default '',
   hero_single_discount_percentage integer not null default 20,
-  hero_single_product_id text not null default ''
+  hero_single_product_id text not null default '',
+  bundle_section_eyebrow text not null default 'Bundle Offer',
+  bundle_section_title text not null default 'Pair your favorites and save more',
+  bundle_section_subtitle text not null default 'Choose two bestsellers as one bundle with a custom deal price.',
+  bundle_first_product_id text not null default '',
+  bundle_second_product_id text not null default '',
+  bundle_custom_price numeric(10, 2) not null default 0,
+  bundle_discount_percentage integer not null default 0
 );
 
 insert into public.site_settings (id)
@@ -81,6 +88,13 @@ alter table public.site_settings add column if not exists hero_single_subtitle t
 alter table public.site_settings add column if not exists hero_single_image_url text not null default '';
 alter table public.site_settings add column if not exists hero_single_discount_percentage integer not null default 20;
 alter table public.site_settings add column if not exists hero_single_product_id text not null default '';
+alter table public.site_settings add column if not exists bundle_section_eyebrow text not null default 'Bundle Offer';
+alter table public.site_settings add column if not exists bundle_section_title text not null default 'Pair your favorites and save more';
+alter table public.site_settings add column if not exists bundle_section_subtitle text not null default 'Choose two bestsellers as one bundle with a custom deal price.';
+alter table public.site_settings add column if not exists bundle_first_product_id text not null default '';
+alter table public.site_settings add column if not exists bundle_second_product_id text not null default '';
+alter table public.site_settings add column if not exists bundle_custom_price numeric(10, 2) not null default 0;
+alter table public.site_settings add column if not exists bundle_discount_percentage integer not null default 0;
 
 insert into storage.buckets (id, name, public)
 values ('zaru-assets', 'zaru-assets', true)

@@ -27,14 +27,24 @@ type CheckoutBody = {
   totalItems: number
   subtotalAmount?: number
   discountAmount?: number
+  shippingAmount?: number
   payableAmount?: number
   totalAmount: number
   whatsapp?: string
 }
 
+const SHIPPING_CHARGE = 200
+
 const ADMIN_ORDER_EMAIL = process.env.ADMIN_ORDER_EMAIL ?? "Zarufragrancehub@gmail.com"
 
-async function sendAdminOrderEmail(orderId: string, payload: CheckoutBody, subtotalAmount: number, discountAmount: number, payableAmount: number) {
+async function sendAdminOrderEmail(
+  orderId: string,
+  payload: CheckoutBody,
+  subtotalAmount: number,
+  discountAmount: number,
+  shippingAmount: number,
+  payableAmount: number,
+) {
   const resendKey = process.env.RESEND_API_KEY
   if (!resendKey) return false
 
@@ -57,6 +67,7 @@ async function sendAdminOrderEmail(orderId: string, payload: CheckoutBody, subto
     <p><strong>Reference:</strong> ${payload.payment.reference ?? "N/A"}</p>
     <p><strong>Subtotal:</strong> PKR ${subtotalAmount}</p>
     <p><strong>Discount:</strong> PKR ${discountAmount}</p>
+    <p><strong>Shipping:</strong> PKR ${shippingAmount}</p>
     <p><strong>Payable:</strong> PKR ${payableAmount}</p>
     <p><strong>Total Items:</strong> ${payload.totalItems}</p>
     <p><strong>Notes:</strong> ${payload.notes ?? "N/A"}</p>
@@ -87,7 +98,14 @@ function createOrderId() {
   return `ZR-${Date.now().toString().slice(-7)}-${rand}`
 }
 
-function buildOrderMessage(orderId: string, payload: CheckoutBody, subtotalAmount: number, discountAmount: number, payableAmount: number) {
+function buildOrderMessage(
+  orderId: string,
+  payload: CheckoutBody,
+  subtotalAmount: number,
+  discountAmount: number,
+  shippingAmount: number,
+  payableAmount: number,
+) {
   const lines = payload.items
     .map((item) => `${item.name} x${item.quantity} = PKR ${item.lineTotal}`)
     .join(" | ")
@@ -105,6 +123,7 @@ function buildOrderMessage(orderId: string, payload: CheckoutBody, subtotalAmoun
     `Total Items: ${payload.totalItems}`,
     `Subtotal: PKR ${subtotalAmount}`,
     `Discount: PKR ${discountAmount}`,
+    `Shipping: PKR ${shippingAmount}`,
     `Payable Amount: PKR ${payableAmount}`,
     `Items: ${lines}`,
     `Notes: ${payload.notes ?? "N/A"}`,
@@ -177,10 +196,11 @@ export async function POST(request: Request) {
 
     const subtotalAmount = body.items.reduce((sum, item) => sum + item.lineTotal, 0)
     const discountAmount = body.payment.type === "advance" ? Math.round(subtotalAmount * 0.1) : 0
-    const payableAmount = subtotalAmount - discountAmount
+    const shippingAmount = SHIPPING_CHARGE
+    const payableAmount = subtotalAmount - discountAmount + shippingAmount
 
     const orderId = createOrderId()
-    const orderMessage = buildOrderMessage(orderId, body, subtotalAmount, discountAmount, payableAmount)
+    const orderMessage = buildOrderMessage(orderId, body, subtotalAmount, discountAmount, shippingAmount, payableAmount)
 
     const supabase = getSupabaseServerAdminClient() ?? getSupabaseServerAnonClient()
     if (supabase) {
@@ -210,7 +230,7 @@ export async function POST(request: Request) {
       }
     }
 
-    await sendAdminOrderEmail(orderId, body, subtotalAmount, discountAmount, payableAmount)
+    await sendAdminOrderEmail(orderId, body, subtotalAmount, discountAmount, shippingAmount, payableAmount)
 
     try {
       const synced = await submitToGoogleSheet(orderMessage, body)

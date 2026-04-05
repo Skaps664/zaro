@@ -124,7 +124,11 @@ export default async function ProductDetailPage({ params }: ProductPageProps) {
             <h3 className="font-serif text-3xl text-foreground mb-6">You may also like</h3>
             <div className="grid md:grid-cols-3 gap-5">
               {related.map((item) => (
-                <Link key={item.id} href={`/products/${item.id}`} className="group rounded-2xl border border-border/60 bg-card overflow-hidden">
+                <Link
+                  key={item.id}
+                  href={`/products/${encodeURIComponent(item.id)}`}
+                  className="group rounded-2xl border border-border/60 bg-card overflow-hidden"
+                >
                   <div className="aspect-[4/3] bg-muted overflow-hidden">
                     <img
                       src={item.images?.[0] ?? item.image}

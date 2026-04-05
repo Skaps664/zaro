@@ -121,6 +121,13 @@ type SiteSettings = {
   hero_single_image_url: string
   hero_single_discount_percentage: number
   hero_single_product_id: string
+  bundle_section_eyebrow: string
+  bundle_section_title: string
+  bundle_section_subtitle: string
+  bundle_first_product_id: string
+  bundle_second_product_id: string
+  bundle_custom_price: number
+  bundle_discount_percentage: number
 }
 
 type Order = {
@@ -175,6 +182,13 @@ const defaultSettings: SiteSettings = {
   hero_single_image_url: "",
   hero_single_discount_percentage: 20,
   hero_single_product_id: "",
+  bundle_section_eyebrow: "Bundle Offer",
+  bundle_section_title: "Pair your favorites and save more",
+  bundle_section_subtitle: "Choose two bestsellers as one bundle with a custom deal price.",
+  bundle_first_product_id: "",
+  bundle_second_product_id: "",
+  bundle_custom_price: 0,
+  bundle_discount_percentage: 0,
 }
 
 const defaultProductForm = {
@@ -498,6 +512,13 @@ export function AdminPageContent() {
     heroSingleImageUrl: settings.hero_single_image_url,
     heroSingleDiscountPercentage: settings.hero_single_discount_percentage,
     heroSingleProductId: settings.hero_single_product_id,
+    bundleSectionEyebrow: settings.bundle_section_eyebrow,
+    bundleSectionTitle: settings.bundle_section_title,
+    bundleSectionSubtitle: settings.bundle_section_subtitle,
+    bundleFirstProductId: settings.bundle_first_product_id,
+    bundleSecondProductId: settings.bundle_second_product_id,
+    bundleCustomPrice: settings.bundle_custom_price,
+    bundleDiscountPercentage: settings.bundle_discount_percentage,
   })
 
   const deleteAllProducts = async () => {
@@ -723,12 +744,16 @@ export function AdminPageContent() {
           <h1 className="font-serif text-4xl md:text-5xl text-foreground">Store Admin Panel</h1>
         </div>
 
-        <div className="mb-6 grid grid-cols-2 md:grid-cols-6 gap-2">
+        <div className="mb-6 flex flex-wrap gap-2">
           {["dashboard", "orders", "products", "home", "hero-product", "all-products"].map((tab) => (
             <Button
               key={tab}
-              variant={activeTab === tab ? "default" : "outline"}
-              className="rounded-full bg-transparent"
+              variant="outline"
+              className={
+                activeTab === tab
+                  ? "rounded-full border-primary bg-primary text-primary-foreground hover:bg-primary/90"
+                  : "rounded-full bg-transparent"
+              }
               onClick={() => setActiveTab(tab as AdminTab)}
             >
               {tab === "all-products"
@@ -736,7 +761,7 @@ export function AdminPageContent() {
                 : tab === "home"
                   ? "Home Page"
                   : tab === "hero-product"
-                    ? "Hero Product"
+                    ? "Sale Product"
                     : tab[0].toUpperCase() + tab.slice(1)}
             </Button>
           ))}
@@ -1218,7 +1243,7 @@ export function AdminPageContent() {
         {activeTab === "hero-product" && (
           <div className="space-y-6">
             <div className="rounded-3xl border border-border/60 bg-card p-6 space-y-3">
-              <h2 className="font-serif text-2xl text-foreground">Hero Product Section</h2>
+              <h2 className="font-serif text-2xl text-foreground">Sale Product Section</h2>
               <div className="grid gap-3 sm:grid-cols-2">
                 <input
                   value={settings.hero_single_eyebrow}
@@ -1297,7 +1322,102 @@ export function AdminPageContent() {
               </div>
 
               <Button className="rounded-full" onClick={() => void saveHeroProductSettings()} disabled={isSaving}>
-                {isSaving ? "Saving..." : "Save Hero Product Settings"}
+                {isSaving ? "Saving..." : "Save Sale Product Settings"}
+              </Button>
+            </div>
+
+            <div className="rounded-3xl border border-border/60 bg-card p-6 space-y-3">
+              <h2 className="font-serif text-2xl text-foreground">Bundle Product Section</h2>
+
+              <div className="grid gap-3 sm:grid-cols-2">
+                <input
+                  value={settings.bundle_section_eyebrow}
+                  onChange={(event) => setSettings((prev) => ({ ...prev, bundle_section_eyebrow: event.target.value }))}
+                  placeholder="Eyebrow text"
+                  className="h-10 rounded-xl border border-border/70 bg-background px-3 text-sm"
+                />
+                <input
+                  value={settings.bundle_section_title}
+                  onChange={(event) => setSettings((prev) => ({ ...prev, bundle_section_title: event.target.value }))}
+                  placeholder="Title"
+                  className="h-10 rounded-xl border border-border/70 bg-background px-3 text-sm"
+                />
+              </div>
+
+              <textarea
+                value={settings.bundle_section_subtitle}
+                onChange={(event) => setSettings((prev) => ({ ...prev, bundle_section_subtitle: event.target.value }))}
+                placeholder="Subtitle"
+                className="min-h-20 w-full rounded-xl border border-border/70 bg-background px-3 py-2 text-sm"
+              />
+
+              <div className="grid gap-3 sm:grid-cols-2">
+                <select
+                  value={settings.bundle_first_product_id}
+                  onChange={(event) => setSettings((prev) => ({ ...prev, bundle_first_product_id: event.target.value }))}
+                  className="h-10 rounded-xl border border-border/70 bg-background px-3 text-sm"
+                >
+                  <option value="">Select first product</option>
+                  {products.map((product) => (
+                    <option key={product.id} value={product.id}>
+                      {product.name}
+                    </option>
+                  ))}
+                </select>
+
+                <select
+                  value={settings.bundle_second_product_id}
+                  onChange={(event) => setSettings((prev) => ({ ...prev, bundle_second_product_id: event.target.value }))}
+                  className="h-10 rounded-xl border border-border/70 bg-background px-3 text-sm"
+                >
+                  <option value="">Select second product</option>
+                  {products
+                    .filter((product) => product.id !== settings.bundle_first_product_id)
+                    .map((product) => (
+                      <option key={product.id} value={product.id}>
+                        {product.name}
+                      </option>
+                    ))}
+                </select>
+              </div>
+
+              <div className="grid gap-3 sm:grid-cols-2">
+                <input
+                  type="number"
+                  min={0}
+                  value={settings.bundle_custom_price}
+                  onChange={(event) =>
+                    setSettings((prev) => ({
+                      ...prev,
+                      bundle_custom_price: Math.max(0, Number(event.target.value || 0)),
+                    }))
+                  }
+                  placeholder="Custom bundle price"
+                  className="h-10 rounded-xl border border-border/70 bg-background px-3 text-sm"
+                />
+
+                <input
+                  type="number"
+                  min={0}
+                  max={90}
+                  value={settings.bundle_discount_percentage}
+                  onChange={(event) =>
+                    setSettings((prev) => ({
+                      ...prev,
+                      bundle_discount_percentage: Math.max(0, Math.min(90, Number(event.target.value || 0))),
+                    }))
+                  }
+                  placeholder="Bundle discount percentage"
+                  className="h-10 rounded-xl border border-border/70 bg-background px-3 text-sm"
+                />
+              </div>
+
+              <p className="text-xs text-muted-foreground">
+                If custom bundle price is 0, bundle uses sum of selected products price and then applies bundle discount.
+              </p>
+
+              <Button className="rounded-full" onClick={() => void saveHeroProductSettings()} disabled={isSaving}>
+                {isSaving ? "Saving..." : "Save Bundle Product Settings"}
               </Button>
             </div>
           </div>

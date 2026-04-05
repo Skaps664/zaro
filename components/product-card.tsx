@@ -27,7 +27,7 @@ export function ProductCard({ product, compact = false }: ProductCardProps) {
   }).format(price)
 
   const goToProduct = () => {
-    router.push(`/products/${product.id}`)
+    router.push(`/products/${encodeURIComponent(product.id)}`)
   }
 
   const addToCart = (event: MouseEvent<HTMLButtonElement>) => {

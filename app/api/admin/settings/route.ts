@@ -33,6 +33,13 @@ type SettingsInput = {
   heroSingleImageUrl: string
   heroSingleDiscountPercentage: number
   heroSingleProductId: string
+  bundleSectionEyebrow: string
+  bundleSectionTitle: string
+  bundleSectionSubtitle: string
+  bundleFirstProductId: string
+  bundleSecondProductId: string
+  bundleCustomPrice: number
+  bundleDiscountPercentage: number
 }
 
 const MAX_COMPAT_RETRIES = 24
@@ -69,6 +76,13 @@ function mapToDbPayload(settings: SettingsInput) {
     hero_single_image_url: settings.heroSingleImageUrl,
     hero_single_discount_percentage: settings.heroSingleDiscountPercentage,
     hero_single_product_id: settings.heroSingleProductId,
+    bundle_section_eyebrow: settings.bundleSectionEyebrow,
+    bundle_section_title: settings.bundleSectionTitle,
+    bundle_section_subtitle: settings.bundleSectionSubtitle,
+    bundle_first_product_id: settings.bundleFirstProductId,
+    bundle_second_product_id: settings.bundleSecondProductId,
+    bundle_custom_price: settings.bundleCustomPrice,
+    bundle_discount_percentage: settings.bundleDiscountPercentage,
   }
 }
 

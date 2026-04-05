@@ -8,16 +8,21 @@ import { Footer } from "@/components/footer"
 import { TextTestimonialsSection } from "@/components/text-testimonials-section"
 import { VideoTestimonialsSection } from "@/components/video-testimonials-section"
 import { HeroProductSection } from "@/components/hero-product-section"
-import { getFeaturedCatalogProducts, getHeroSingleProduct, getSiteSettings } from "@/lib/storefront-data"
+import { BundleProductSection } from "@/components/bundle-product-section"
+import { getCatalogProducts, getFeaturedCatalogProducts, getHeroSingleProduct, getSiteSettings } from "@/lib/storefront-data"
 
 export const revalidate = 120
 
 export default async function Home() {
-  const [siteSettings, featuredProducts, heroSingleProduct] = await Promise.all([
+  const [siteSettings, featuredProducts, heroSingleProduct, catalog] = await Promise.all([
     getSiteSettings(),
     getFeaturedCatalogProducts(3),
     getHeroSingleProduct(),
+    getCatalogProducts(),
   ])
+
+  const bundleFirstProduct = catalog.find((item) => item.id === siteSettings.bundleFirstProductId)
+  const bundleSecondProduct = catalog.find((item) => item.id === siteSettings.bundleSecondProductId)
 
   return (
     <main className="min-h-screen bg-background">
@@ -34,12 +39,6 @@ export default async function Home() {
         title={siteSettings.heroProductsTitle}
         subtitle={siteSettings.heroProductsSubtitle}
       />
-      <VideoTestimonialsSection
-        heading={siteSettings.videoReviewsHeading}
-        subheading={siteSettings.videoReviewsSubheading}
-        videos={siteSettings.videoReviews}
-      />
-      <ScienceSection />
       <HeroProductSection
         product={heroSingleProduct}
         eyebrow={siteSettings.heroSingleEyebrow}
@@ -48,7 +47,24 @@ export default async function Home() {
         imageUrl={siteSettings.heroSingleImageUrl}
         discountPercentage={siteSettings.heroSingleDiscountPercentage}
       />
+      <VideoTestimonialsSection
+        heading={siteSettings.videoReviewsHeading}
+        subheading={siteSettings.videoReviewsSubheading}
+        videos={siteSettings.videoReviews}
+      />
+      
+      <BundleProductSection
+        firstProduct={bundleFirstProduct}
+        secondProduct={bundleSecondProduct}
+        eyebrow={siteSettings.bundleSectionEyebrow}
+        title={siteSettings.bundleSectionTitle}
+        subtitle={siteSettings.bundleSectionSubtitle}
+        customPrice={siteSettings.bundleCustomPrice}
+        discountPercentage={siteSettings.bundleDiscountPercentage}
+      />
+
       <TextTestimonialsSection/>
+      <ScienceSection />
       <SpotlightSection
         imageUrl={siteSettings.bannerImage1}
         subtitle={siteSettings.spotlightSubtitle}
@@ -57,13 +73,13 @@ export default async function Home() {
         paragraph2={siteSettings.spotlightParagraph2}
       />
 
-      <MissionSection
+      {/* <MissionSection
         imageUrl={siteSettings.bannerImage2}
         eyebrow={siteSettings.missionEyebrow}
         title={siteSettings.missionTitle}
         paragraph={siteSettings.missionParagraph}
         cta={siteSettings.missionCta}
-      />
+      /> */}
       <Footer />
     </main>
   )

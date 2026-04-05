@@ -27,7 +27,13 @@ type CartProduct = {
   name: string
   image: string
   price: number
+  originalPrice?: number
   lineTotal: number
+}
+
+type FeaturedDropSale = {
+  productId: string
+  discountPercentage: number
 }
 
 type SavedOrder = {
@@ -44,6 +50,7 @@ type CartContextValue = {
   detailedItems: CartProduct[]
   cartCount: number
   totalAmount: number
+  featuredDropDiscountAmount: number
   isCartOpen: boolean
   isSubmittingOrder: boolean
   currentUser: User | null
@@ -101,6 +108,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
   const [isSubmittingOrder, setIsSubmittingOrder] = useState(false)
   const [currentUser, setCurrentUser] = useState<User | null>(null)
   const [currentSession, setCurrentSession] = useState<Session | null>(null)
+  const [featuredDropSale, setFeaturedDropSale] = useState<FeaturedDropSale | null>(null)
 
   const supabase = useMemo(() => getSupabaseBrowserClient(), [])
 
@@ -144,27 +152,78 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     }
   }, [supabase])
 
+  useEffect(() => {
+    let isMounted = true
+
+    const loadFeaturedDropSale = async () => {
+      try {
+        const res = await fetch("/api/storefront/sale", { cache: "no-store" })
+        const payload = (await res.json()) as {
+          success: boolean
+          sale?: { productId?: string; discountPercentage?: number } | null
+        }
+
+        if (!isMounted || !res.ok || !payload.success) return
+
+        const productId = String(payload.sale?.productId ?? "").trim()
+        const discountPercentage = Number(payload.sale?.discountPercentage ?? 0)
+
+        if (!productId || !Number.isFinite(discountPercentage) || discountPercentage <= 0) {
+          setFeaturedDropSale(null)
+          return
+        }
+
+        setFeaturedDropSale({
+          productId,
+          discountPercentage: Math.max(0, Math.min(90, Math.round(discountPercentage))),
+        })
+      } catch {
+        if (isMounted) {
+          setFeaturedDropSale(null)
+        }
+      }
+    }
+
+    void loadFeaturedDropSale()
+
+    return () => {
+      isMounted = false
+    }
+  }, [])
+
   const detailedItems = useMemo<CartProduct[]>(() => {
     return items
       .map((item) => {
         const product = getProductById(item.productId)
         if (!product && !item.name) return null
 
-        const price = typeof item.price === "number" ? item.price : getProductPrice(item.productId)
+        const basePrice = typeof item.price === "number" ? item.price : getProductPrice(item.productId)
+        const salePercent =
+          featuredDropSale && featuredDropSale.productId === item.productId ? featuredDropSale.discountPercentage : 0
+        const price = salePercent > 0 ? Math.max(0, Math.round(basePrice * (1 - salePercent / 100))) : basePrice
         return {
           productId: item.productId,
           quantity: item.quantity,
           name: item.name ?? product?.name ?? "ZARU Product",
           image: item.image ?? product?.image ?? "/placeholder.svg",
           price,
+          originalPrice: salePercent > 0 ? basePrice : undefined,
           lineTotal: price * item.quantity,
         }
       })
       .filter((item): item is CartProduct => item !== null)
-  }, [items])
+  }, [featuredDropSale, items])
 
   const cartCount = useMemo(() => items.reduce((sum, item) => sum + item.quantity, 0), [items])
   const totalAmount = useMemo(() => detailedItems.reduce((sum, item) => sum + item.lineTotal, 0), [detailedItems])
+  const featuredDropDiscountAmount = useMemo(
+    () =>
+      detailedItems.reduce((sum, item) => {
+        const originalPrice = typeof item.originalPrice === "number" ? item.originalPrice : item.price
+        return sum + (originalPrice - item.price) * item.quantity
+      }, 0),
+    [detailedItems],
+  )
 
   const openCart = useCallback(() => setIsCartOpen(true), [])
   const closeCart = useCallback(() => setIsCartOpen(false), [])
@@ -330,6 +389,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
       detailedItems,
       cartCount,
       totalAmount,
+      featuredDropDiscountAmount,
       isCartOpen,
       isSubmittingOrder,
       currentUser,
@@ -354,6 +414,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
       currentSession,
       currentUser,
       detailedItems,
+      featuredDropDiscountAmount,
       isCartOpen,
       isSubmittingOrder,
       items,
