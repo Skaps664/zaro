@@ -1171,7 +1171,7 @@ export function AdminPageContent() {
               <textarea value={settings.spotlight_paragraph_1} onChange={(event) => setSettings((prev) => ({ ...prev, spotlight_paragraph_1: event.target.value }))} placeholder="Spotlight paragraph 1" className="min-h-20 w-full rounded-xl border border-border/70 bg-background px-3 py-2 text-sm" />
               <textarea value={settings.spotlight_paragraph_2} onChange={(event) => setSettings((prev) => ({ ...prev, spotlight_paragraph_2: event.target.value }))} placeholder="Spotlight paragraph 2" className="min-h-20 w-full rounded-xl border border-border/70 bg-background px-3 py-2 text-sm" />
 
-              <div className="rounded-2xl border border-border/60 bg-background p-3 space-y-3">
+              {/* <div className="rounded-2xl border border-border/60 bg-background p-3 space-y-3">
                 <p className="text-sm text-muted-foreground">Mission image</p>
                 <input value={settings.banner_image_2} onChange={(event) => setSettings((prev) => ({ ...prev, banner_image_2: event.target.value }))} placeholder="Mission image URL" className="h-10 w-full rounded-xl border border-border/70 bg-background px-3 text-sm" />
                 <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
@@ -1185,7 +1185,7 @@ export function AdminPageContent() {
                 <input value={settings.mission_title} onChange={(event) => setSettings((prev) => ({ ...prev, mission_title: event.target.value }))} placeholder="Mission title" className="h-10 rounded-xl border border-border/70 bg-background px-3 text-sm" />
               </div>
               <textarea value={settings.mission_paragraph} onChange={(event) => setSettings((prev) => ({ ...prev, mission_paragraph: event.target.value }))} placeholder="Mission paragraph" className="min-h-20 w-full rounded-xl border border-border/70 bg-background px-3 py-2 text-sm" />
-              <input value={settings.mission_cta} onChange={(event) => setSettings((prev) => ({ ...prev, mission_cta: event.target.value }))} placeholder="Mission CTA text" className="h-10 w-full rounded-xl border border-border/70 bg-background px-3 text-sm" />
+              <input value={settings.mission_cta} onChange={(event) => setSettings((prev) => ({ ...prev, mission_cta: event.target.value }))} placeholder="Mission CTA text" className="h-10 w-full rounded-xl border border-border/70 bg-background px-3 text-sm" /> */}
             </div>
 
             <Button className="rounded-full" onClick={() => void saveHomeSettings()} disabled={isSaving}>
