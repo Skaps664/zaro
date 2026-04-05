@@ -95,7 +95,21 @@ export function Footer() {
 
         {/* Bottom */}
         <div className="border-t border-background/10 pt-8 flex flex-col md:flex-row justify-between items-center gap-4">
-          <p className="text-sm text-background/50">© 2025 ZARU. All rights reserved.</p>
+          <div className="text-center md:text-left">
+            <p className="text-sm text-background/50">© 2025 ZARU. All rights reserved.</p>
+            <p className="text-xs text-background/50 mt-1">
+              Designed and developed by{" "}
+              <a
+                href="https://www.skordlabs.com"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="underline underline-offset-2 hover:text-background transition-colors"
+              >
+                Skordlabs
+              </a>
+              .
+            </p>
+          </div>
           <div className="flex gap-6 text-sm text-background/50">
             <Link href="/legal-notice" className="hover:text-background transition-colors">
               Legal notice
