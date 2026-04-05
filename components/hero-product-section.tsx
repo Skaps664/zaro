@@ -122,6 +122,9 @@ export function HeroProductSection({
             <p className="text-muted-foreground leading-relaxed mb-6">{sectionSubtitle}</p>
 
             <p className="text-sm text-muted-foreground mb-1">{product.name}</p>
+            <p className="text-sm text-muted-foreground mb-4">
+              Inspired by <span className="font-medium text-foreground">{product.inspiredBy}</span>
+            </p>
             <div className="flex items-end gap-3 mb-6">
               <p className="text-3xl font-semibold text-foreground">{formattedSelling}</p>
               {formattedOriginal && <p className="text-base text-muted-foreground line-through">{formattedOriginal}</p>}

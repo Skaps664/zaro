@@ -47,11 +47,7 @@ export default async function Home() {
         imageUrl={siteSettings.heroSingleImageUrl}
         discountPercentage={siteSettings.heroSingleDiscountPercentage}
       />
-      <VideoTestimonialsSection
-        heading={siteSettings.videoReviewsHeading}
-        subheading={siteSettings.videoReviewsSubheading}
-        videos={siteSettings.videoReviews}
-      />
+      
       
       <BundleProductSection
         firstProduct={bundleFirstProduct}
@@ -62,7 +58,11 @@ export default async function Home() {
         customPrice={siteSettings.bundleCustomPrice}
         discountPercentage={siteSettings.bundleDiscountPercentage}
       />
-
+<VideoTestimonialsSection
+        heading={siteSettings.videoReviewsHeading}
+        subheading={siteSettings.videoReviewsSubheading}
+        videos={siteSettings.videoReviews}
+      />
       <TextTestimonialsSection/>
       <ScienceSection />
       <SpotlightSection

@@ -152,9 +152,19 @@ export function BundleProductSection({
 
               <div className="rounded-2xl border border-border/60 bg-muted/30 p-4 mb-5">
                 <p className="text-sm text-foreground font-medium mb-1">{bundleName}</p>
-                <p className="text-xs text-muted-foreground">
+                {/* <p className="text-xs text-muted-foreground">
                   Includes: {firstProduct.name.replace(/^ZARU\s+/i, "")} + {secondProduct.name.replace(/^ZARU\s+/i, "")}
-                </p>
+                </p> */}
+                <div className="mt-2 space-y-1">
+                  <p className="text-xs text-muted-foreground">
+                    {firstProduct.name.replace(/^ZARU\s+/i, "")} inspired by{" "}
+                    <span className="font-medium text-foreground">{firstProduct.inspiredBy}</span>
+                  </p>
+                  <p className="text-xs text-muted-foreground">
+                    {secondProduct.name.replace(/^ZARU\s+/i, "")} inspired by{" "}
+                    <span className="font-medium text-foreground">{secondProduct.inspiredBy}</span>
+                  </p>
+                </div>
               </div>
 
               <div className="mb-6">
