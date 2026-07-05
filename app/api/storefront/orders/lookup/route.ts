@@ -36,7 +36,7 @@ export async function POST(request: Request) {
     let query = supabase
       .from("customer_orders")
       .select(
-        "id, order_code, customer_name, customer_phone, customer_email, customer_city, customer_address, payment_type, payment_method, subtotal_amount, discount_amount, payable_amount, total_items, items, status, payment_status, tracking_info, notes, created_at, updated_at",
+        "id, order_code, customer_name, customer_phone, customer_email, customer_city, customer_address, payment_type, payment_method, subtotal_amount, discount_amount, payable_amount, total_items, items, status, payment_status, tracking_info, tracking_courier, notes, created_at, updated_at",
       )
       .order("created_at", { ascending: false })
       .limit(50)

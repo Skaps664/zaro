@@ -119,10 +119,14 @@ create table if not exists public.customer_orders (
   status text not null default 'pending',
   payment_status text not null default 'unpaid',
   tracking_info text,
+  tracking_courier text,
   notes text,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
 );
+
+-- Idempotent migration for existing installs that predate the courier column.
+alter table public.customer_orders add column if not exists tracking_courier text;
 
 alter table public.admin_products enable row level security;
 alter table public.site_settings enable row level security;

@@ -33,6 +33,7 @@ type LookupOrder = {
   status: string
   payment_status: string
   tracking_info: string | null
+  tracking_courier: string | null
   notes: string | null
   created_at: string
   updated_at: string
@@ -40,12 +41,11 @@ type LookupOrder = {
 
 type LookupMode = "phone" | "email"
 
-const STATUS_STEPS = ["pending", "confirmed", "packed", "shipped", "delivered"] as const
+const STATUS_STEPS = ["pending", "confirmed", "shipped", "delivered"] as const
 
 const STATUS_LABEL: Record<string, string> = {
   pending: "Pending",
   confirmed: "Confirmed",
-  packed: "Packed",
   shipped: "Shipped",
   delivered: "Delivered",
   cancelled: "Cancelled",
@@ -54,7 +54,6 @@ const STATUS_LABEL: Record<string, string> = {
 const STATUS_TONE: Record<string, string> = {
   pending: "bg-amber-100 text-amber-900 border-amber-200",
   confirmed: "bg-sky-100 text-sky-900 border-sky-200",
-  packed: "bg-indigo-100 text-indigo-900 border-indigo-200",
   shipped: "bg-violet-100 text-violet-900 border-violet-200",
   delivered: "bg-emerald-100 text-emerald-900 border-emerald-200",
   cancelled: "bg-rose-100 text-rose-900 border-rose-200",
@@ -289,9 +288,14 @@ export function AccountPageContent() {
                 {order.tracking_info && (
                   <div className="mt-5 flex items-start gap-3 rounded-2xl border border-primary/30 bg-primary/5 p-4">
                     <Truck className="mt-0.5 h-5 w-5 text-primary" />
-                    <div className="min-w-0">
+                    <div className="min-w-0 flex-1">
                       <p className="text-xs uppercase tracking-wide text-primary">Tracking</p>
-                      <p className="text-sm text-foreground break-all">{order.tracking_info}</p>
+                      {order.tracking_courier && (
+                        <p className="text-sm font-medium text-foreground">Courier: {order.tracking_courier}</p>
+                      )}
+                      <p className="text-sm text-foreground break-all">
+                        Tracking number: {order.tracking_info}
+                      </p>
                     </div>
                   </div>
                 )}

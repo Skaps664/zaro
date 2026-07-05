@@ -1,5 +1,11 @@
 import { NextResponse } from "next/server"
 import { getSupabaseServerAdminClient, getSupabaseServerAnonClient } from "@/lib/supabase-server"
+import {
+  getAdminOrderEmail,
+  renderAdminOrderEmail,
+  renderCustomerOrderConfirmationEmail,
+  sendResendEmail,
+} from "@/lib/emails"
 
 type CheckoutItem = {
   productId: string
@@ -35,67 +41,75 @@ type CheckoutBody = {
 
 const SHIPPING_CHARGE = 200
 
-const ADMIN_ORDER_EMAIL = process.env.ADMIN_ORDER_EMAIL ?? "Zarufragrancehub@gmail.com"
+function createOrderId() {
+  const rand = Math.floor(Math.random() * 900 + 100)
+  return `ZR-${Date.now().toString().slice(-7)}-${rand}`
+}
+
+function toOrderShape(
+  payload: CheckoutBody,
+  subtotalAmount: number,
+  discountAmount: number,
+  payableAmount: number,
+) {
+  return {
+    order_code: "",
+    customer_name: payload.customer.fullName,
+    customer_phone: payload.customer.phone,
+    customer_email: payload.customer.email ?? null,
+    customer_city: payload.customer.city,
+    customer_address: payload.customer.address,
+    payment_type: payload.payment.type ?? "advance",
+    payment_method: payload.payment.method,
+    subtotal_amount: subtotalAmount,
+    discount_amount: discountAmount,
+    payable_amount: payableAmount,
+    total_items: payload.totalItems,
+    items: payload.items.map((item) => ({
+      productId: item.productId,
+      name: item.name,
+      quantity: item.quantity,
+      price: item.price,
+      lineTotal: item.lineTotal,
+    })),
+    status: "pending",
+    payment_status: payload.payment.type === "cod" ? "pending" : "unpaid",
+    tracking_info: null,
+  }
+}
 
 async function sendAdminOrderEmail(
   orderId: string,
   payload: CheckoutBody,
   subtotalAmount: number,
   discountAmount: number,
-  shippingAmount: number,
+  _shippingAmount: number,
   payableAmount: number,
 ) {
-  const resendKey = process.env.RESEND_API_KEY
-  if (!resendKey) return false
-
-  const fromEmail = process.env.ORDER_EMAIL_FROM ?? "orders@zaruscents.com"
-
-  const itemRows = payload.items
-    .map((item) => `<li>${item.name} x${item.quantity} - PKR ${item.lineTotal}</li>`)
-    .join("")
-
-  const html = `
-    <h2>New Order Received</h2>
-    <p><strong>Order ID:</strong> ${orderId}</p>
-    <p><strong>Name:</strong> ${payload.customer.fullName}</p>
-    <p><strong>Email:</strong> ${payload.customer.email ?? "N/A"}</p>
-    <p><strong>Phone:</strong> ${payload.customer.phone}</p>
-    <p><strong>City:</strong> ${payload.customer.city}</p>
-    <p><strong>Address:</strong> ${payload.customer.address}</p>
-    <p><strong>Payment Type:</strong> ${payload.payment.type === "cod" ? "Cash on Delivery" : "Advance Payment"}</p>
-    <p><strong>Payment Method:</strong> ${payload.payment.method}</p>
-    <p><strong>Reference:</strong> ${payload.payment.reference ?? "N/A"}</p>
-    <p><strong>Subtotal:</strong> PKR ${subtotalAmount}</p>
-    <p><strong>Discount:</strong> PKR ${discountAmount}</p>
-    <p><strong>Shipping:</strong> PKR ${shippingAmount}</p>
-    <p><strong>Payable:</strong> PKR ${payableAmount}</p>
-    <p><strong>Total Items:</strong> ${payload.totalItems}</p>
-    <p><strong>Notes:</strong> ${payload.notes ?? "N/A"}</p>
-    <h3>Items</h3>
-    <ul>${itemRows}</ul>
-  `
-
-  const response = await fetch("https://api.resend.com/emails", {
-    method: "POST",
-    headers: {
-      Authorization: `Bearer ${resendKey}`,
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({
-      from: fromEmail,
-      to: [ADMIN_ORDER_EMAIL],
-      subject: `New ZARU order: ${orderId}`,
-      html,
-    }),
-    cache: "no-store",
+  const order = { ...toOrderShape(payload, subtotalAmount, discountAmount, payableAmount), order_code: orderId }
+  return sendResendEmail({
+    to: getAdminOrderEmail(),
+    subject: `New ZARU order: ${orderId}`,
+    html: renderAdminOrderEmail(orderId, order),
+    replyTo: payload.customer.email ?? undefined,
   })
-
-  return response.ok
 }
 
-function createOrderId() {
-  const rand = Math.floor(Math.random() * 900 + 100)
-  return `ZR-${Date.now().toString().slice(-7)}-${rand}`
+async function sendCustomerConfirmationEmail(
+  orderId: string,
+  payload: CheckoutBody,
+  subtotalAmount: number,
+  discountAmount: number,
+  payableAmount: number,
+) {
+  const email = payload.customer.email?.trim()
+  if (!email) return false
+  const order = { ...toOrderShape(payload, subtotalAmount, discountAmount, payableAmount), order_code: orderId }
+  return sendResendEmail({
+    to: email,
+    subject: `Thank you for your ZARU order · #${orderId}`,
+    html: renderCustomerOrderConfirmationEmail(orderId, order),
+  })
 }
 
 function buildOrderMessage(
@@ -231,6 +245,7 @@ export async function POST(request: Request) {
     }
 
     await sendAdminOrderEmail(orderId, body, subtotalAmount, discountAmount, shippingAmount, payableAmount)
+    await sendCustomerConfirmationEmail(orderId, body, subtotalAmount, discountAmount, payableAmount)
 
     try {
       const synced = await submitToGoogleSheet(orderMessage, body)

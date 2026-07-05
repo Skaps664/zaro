@@ -201,9 +201,12 @@ type Order = {
   status: string
   payment_status: string
   tracking_info?: string | null
+  tracking_courier?: string | null
   notes?: string | null
   created_at: string
 }
+
+const TRACKING_COURIERS = ["TCS", "Leopard", "Postex", "M&P"] as const
 
 const defaultSettings: SiteSettings = {
   hero_image_url: "/zaru-hero-2.png",
@@ -267,7 +270,7 @@ const defaultProductForm = {
 }
 
 type AdminTab = "dashboard" | "orders" | "products" | "home" | "sale-bundle" | "products-page"
-type OrderStatusTab = "all" | "pending" | "confirmed" | "packed" | "shipped" | "delivered" | "cancelled"
+type OrderStatusTab = "all" | "pending" | "confirmed" | "shipped" | "delivered" | "cancelled"
 
 const NAV_SECTIONS: Array<{
   label: string
@@ -299,7 +302,6 @@ const ORDER_STATUS_OPTIONS: OrderStatusTab[] = [
   "all",
   "pending",
   "confirmed",
-  "packed",
   "shipped",
   "delivered",
   "cancelled",
@@ -308,7 +310,6 @@ const ORDER_STATUS_OPTIONS: OrderStatusTab[] = [
 const STATUS_TONE: Record<string, string> = {
   pending: "bg-amber-100 text-amber-900 border-amber-200",
   confirmed: "bg-sky-100 text-sky-900 border-sky-200",
-  packed: "bg-indigo-100 text-indigo-900 border-indigo-200",
   shipped: "bg-violet-100 text-violet-900 border-violet-200",
   delivered: "bg-emerald-100 text-emerald-900 border-emerald-200",
   cancelled: "bg-rose-100 text-rose-900 border-rose-200",
@@ -897,6 +898,16 @@ export function AdminPageContent() {
   }
 
   const updateOrder = async (order: Order) => {
+    // Client-side guard mirroring the server rule
+    if (order.status === "shipped") {
+      const hasCourier = Boolean(order.tracking_courier && (TRACKING_COURIERS as readonly string[]).includes(order.tracking_courier))
+      const hasTracking = Boolean(order.tracking_info && order.tracking_info.trim())
+      if (!hasCourier || !hasTracking) {
+        toast.error("Select a courier and enter a tracking number before marking as shipped")
+        return
+      }
+    }
+
     try {
       const res = await fetch(`/api/admin/orders/${order.id}`, {
         method: "PATCH",
@@ -906,6 +917,7 @@ export function AdminPageContent() {
             status: order.status,
             paymentStatus: order.payment_status,
             trackingInfo: order.tracking_info ?? null,
+            trackingCourier: order.tracking_courier ?? null,
           },
         }),
       })
@@ -1630,7 +1642,9 @@ function OrdersView({
                       </Badge>
                     </TableCell>
                     <TableCell className="max-w-[180px] truncate text-xs text-muted-foreground">
-                      {order.tracking_info || "—"}
+                      {order.tracking_info
+                        ? `${order.tracking_courier ? `${order.tracking_courier} · ` : ""}${order.tracking_info}`
+                        : "—"}
                     </TableCell>
                     <TableCell className="text-xs text-muted-foreground">
                       {new Date(order.created_at).toLocaleDateString()}
@@ -1755,7 +1769,6 @@ function OrderDialog({
               >
                 <option value="pending">Pending</option>
                 <option value="confirmed">Confirmed</option>
-                <option value="packed">Packed</option>
                 <option value="shipped">Shipped</option>
                 <option value="delivered">Delivered</option>
                 <option value="cancelled">Cancelled</option>
@@ -1776,19 +1789,39 @@ function OrderDialog({
             </Field>
           </div>
 
-          <div className="mt-3">
-            <Field label="Tracking info" hint="Shown to the customer on their order lookup page">
+          <div className="mt-3 grid gap-3 sm:grid-cols-2">
+            <Field label="Courier" hint="Required when marking as shipped">
+              <select
+                value={order.tracking_courier ?? ""}
+                onChange={(event) => onChange({ ...order, tracking_courier: event.target.value || null })}
+                className={inputCls}
+              >
+                <option value="">Select courier</option>
+                <option value="TCS">TCS</option>
+                <option value="Leopard">Leopard</option>
+                <option value="Postex">Postex</option>
+                <option value="M&P">M&amp;P</option>
+              </select>
+            </Field>
+
+            <Field label="Tracking number" hint="Shown to the customer">
               <div className="relative">
                 <Truck className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                 <input
                   value={order.tracking_info ?? ""}
                   onChange={(event) => onChange({ ...order, tracking_info: event.target.value })}
-                  placeholder="e.g. TCS 1234567890 or courier link"
+                  placeholder="e.g. 1234567890"
                   className={`${inputCls} pl-9`}
                 />
               </div>
             </Field>
           </div>
+
+          {order.status === "shipped" && (!order.tracking_courier || !order.tracking_info?.trim()) && (
+            <p className="mt-2 text-xs text-rose-700">
+              You must pick a courier and enter a tracking number to mark this order as shipped.
+            </p>
+          )}
         </div>
 
         <DialogFooter>
