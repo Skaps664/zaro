@@ -1,10 +1,12 @@
 import { StaticPageLayout } from "@/components/static-page-layout"
 import { SITE_CONTACT } from "@/lib/site-contact"
+import { buildMetadata } from "@/lib/seo"
 
-export const metadata = {
-  title: "Legal Notice | ZARU",
-  description: "Legal information and business notice for ZARU.",
-}
+export const metadata = buildMetadata({
+  title: "Legal Notice",
+  path: "/legal-notice",
+  description: "Legal information and business notice for ZARU Fragrance Hub, Pakistan.",
+})
 
 export default function LegalNoticePage() {
   return (

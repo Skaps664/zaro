@@ -1,9 +1,11 @@
 import { StaticPageLayout } from "@/components/static-page-layout"
+import { buildMetadata } from "@/lib/seo"
 
-export const metadata = {
-  title: "Privacy Policy | ZARU",
-  description: "Learn how ZARU handles and protects your personal information.",
-}
+export const metadata = buildMetadata({
+  title: "Privacy Policy",
+  path: "/privacy-policy",
+  description: "How ZARU Fragrance Hub collects, uses, and protects your personal information when you shop and interact with us.",
+})
 
 export default function PrivacyPolicyPage() {
   return (

@@ -1,10 +1,19 @@
 import { StaticPageLayout } from "@/components/static-page-layout"
 import { SITE_CONTACT } from "@/lib/site-contact"
+import { buildMetadata } from "@/lib/seo"
 
-export const metadata = {
-  title: "Contact | ZARU",
-  description: "Contact ZARU for orders, support, and product assistance.",
-}
+export const metadata = buildMetadata({
+  title: "Contact Us",
+  path: "/contact",
+  description:
+    "Reach the ZARU Fragrance Hub team on WhatsApp, phone, or email for order help, scent recommendations, and support across Pakistan.",
+  keywords: [
+    "ZARU contact",
+    "ZARU customer support",
+    "ZARU WhatsApp",
+    "perfume customer support Pakistan",
+  ],
+})
 
 export default function ContactPage() {
   return (

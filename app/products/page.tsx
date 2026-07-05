@@ -2,8 +2,24 @@ import { Header } from "@/components/header"
 import { Footer } from "@/components/footer"
 import { ProductCard } from "@/components/product-card"
 import { getCatalogProducts, getSiteSettings } from "@/lib/storefront-data"
+import { buildMetadata } from "@/lib/seo"
 
 export const revalidate = 120
+
+export const metadata = buildMetadata({
+  title: "Shop All Fragrances",
+  path: "/products",
+  description:
+    "Browse the full ZARU Fragrance Hub catalog — premium impressions of iconic designer perfumes, blended to project stronger and last longer in Pakistan's climate. Cash on delivery available nationwide.",
+  keywords: [
+    "ZARU fragrances catalog",
+    "buy perfume online Pakistan",
+    "designer inspired perfumes Pakistan",
+    "long lasting perfume Pakistan",
+    "perfume for men Pakistan",
+    "perfume for women Pakistan",
+  ],
+})
 
 export default async function ProductsPage() {
   const [catalog, siteSettings] = await Promise.all([getCatalogProducts(), getSiteSettings()])

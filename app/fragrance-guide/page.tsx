@@ -1,9 +1,19 @@
 import { StaticPageLayout } from "@/components/static-page-layout"
+import { buildMetadata } from "@/lib/seo"
 
-export const metadata = {
-  title: "Fragrance Guide | ZARU",
-  description: "Learn how to choose and wear ZARU fragrances for best performance.",
-}
+export const metadata = buildMetadata({
+  title: "Fragrance Guide",
+  path: "/fragrance-guide",
+  description:
+    "How to pick, apply, and store fragrances for maximum projection and longevity in Pakistan's climate. Learn ZARU's tips for daily wear, evenings, and special occasions.",
+  keywords: [
+    "how to choose perfume",
+    "how to apply perfume",
+    "perfume longevity tips",
+    "best perfume Pakistan",
+    "perfume guide Pakistan",
+  ],
+})
 
 export default function FragranceGuidePage() {
   return (

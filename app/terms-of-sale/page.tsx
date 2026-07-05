@@ -1,10 +1,12 @@
 import { StaticPageLayout } from "@/components/static-page-layout"
 import { SITE_CONTACT } from "@/lib/site-contact"
+import { buildMetadata } from "@/lib/seo"
 
-export const metadata = {
-  title: "Terms of Sale | ZARU",
-  description: "Terms and conditions related to purchases made with ZARU.",
-}
+export const metadata = buildMetadata({
+  title: "Terms of Sale",
+  path: "/terms-of-sale",
+  description: "The terms and conditions that apply to every ZARU Fragrance Hub purchase, including payment, delivery, and returns.",
+})
 
 export default function TermsOfSalePage() {
   return (

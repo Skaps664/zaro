@@ -9,6 +9,14 @@ import { ProductImageGallery } from "@/components/product-image-gallery"
 import { ProductVideoSection } from "@/components/product-video-section"
 import { getCatalogProductById, getCatalogProducts } from "@/lib/storefront-data"
 import { getProductPrice } from "@/lib/products"
+import {
+  JsonLd,
+  SITE_NAME,
+  SITE_URL,
+  breadcrumbJsonLd,
+  buildMetadata,
+  productJsonLd,
+} from "@/lib/seo"
 
 export const revalidate = 120
 
@@ -21,15 +29,35 @@ export async function generateMetadata({ params }: ProductPageProps): Promise<Me
   const product = await getCatalogProductById(id)
 
   if (!product) {
-    return {
-      title: "Product not found | ZARU",
-    }
+    return buildMetadata({
+      title: "Product not found",
+      path: `/products/${id}`,
+      description: "This fragrance is not available. Explore the full ZARU Fragrance Hub catalog for premium impressions of iconic perfumes.",
+      noIndex: true,
+    })
   }
 
-  return {
-    title: `${product.name} | ZARU`,
-    description: `${product.description} Inspired by ${product.inspiredBy}.`,
-  }
+  const description = `${product.name} by ${SITE_NAME} — a premium impression inspired by ${product.inspiredBy}. ${product.description} ${product.longevity ? `Longevity: ${product.longevity}.` : ""} ${product.projection ? `Projection: ${product.projection}.` : ""}`.replace(/\s+/g, " ").trim()
+
+  return buildMetadata({
+    title: `${product.name} — Inspired by ${product.inspiredBy}`,
+    path: `/products/${product.id}`,
+    description,
+    image: product.image,
+    type: "product",
+    keywords: [
+      product.name,
+      `${product.name} Pakistan`,
+      `${product.inspiredBy} inspired`,
+      `${product.inspiredBy} impression`,
+      `${product.name} price Pakistan`,
+      "ZARU Fragrance Hub",
+      product.category,
+      `${product.audience} perfume Pakistan`,
+      "long lasting perfume",
+      "designer inspired perfume Pakistan",
+    ].filter(Boolean),
+  })
 }
 
 export default async function ProductDetailPage({ params }: ProductPageProps) {
@@ -54,6 +82,26 @@ export default async function ProductDetailPage({ params }: ProductPageProps) {
   return (
     <main className="min-h-screen bg-background">
       <Header />
+
+      <JsonLd
+        data={productJsonLd({
+          id: product.id,
+          name: product.name,
+          description: `${product.description} Inspired by ${product.inspiredBy}.`,
+          image: [product.image, ...(product.images ?? [])].filter(Boolean),
+          price: productPrice,
+          inspiredBy: product.inspiredBy,
+          audience: product.audience,
+          category: product.category,
+        })}
+      />
+      <JsonLd
+        data={breadcrumbJsonLd([
+          { name: "Home", path: "/" },
+          { name: "All Fragrances", path: "/products" },
+          { name: product.name, path: `/products/${product.id}` },
+        ])}
+      />
 
       <section className="pt-32 pb-16 lg:pt-36 lg:pb-24">
         <div className="max-w-7xl mx-auto px-6 lg:px-8">

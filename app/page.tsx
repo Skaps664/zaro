@@ -10,8 +10,15 @@ import { VideoTestimonialsSection } from "@/components/video-testimonials-sectio
 import { HeroProductSection } from "@/components/hero-product-section"
 import { BundleProductSection } from "@/components/bundle-product-section"
 import { getCatalogProducts, getFeaturedCatalogProducts, getHeroSingleProduct, getSiteSettings } from "@/lib/storefront-data"
+import { buildMetadata } from "@/lib/seo"
 
 export const revalidate = 120
+
+export const metadata = buildMetadata({
+  path: "/",
+  description:
+    "Shop premium fragrance impressions of the world's most iconic perfumes — engineered for Pakistan's climate for stronger projection, longer longevity, and smarter local pricing. Free WhatsApp support and cash on delivery across Pakistan.",
+})
 
 export default async function Home() {
   const [siteSettings, featuredProducts, heroSingleProduct, catalog] = await Promise.all([

@@ -1,10 +1,13 @@
 import { StaticPageLayout } from "@/components/static-page-layout"
 import { SITE_CONTACT } from "@/lib/site-contact"
+import { buildMetadata } from "@/lib/seo"
 
-export const metadata = {
-  title: "Track Order | ZARU",
-  description: "Track your ZARU order status and delivery progress.",
-}
+export const metadata = buildMetadata({
+  title: "Track Order",
+  path: "/track-order",
+  description: "Track your ZARU Fragrance Hub order status and delivery progress across Pakistan.",
+  noIndex: true,
+})
 
 export default function TrackOrderPage() {
   return (
