@@ -14,6 +14,7 @@ import {
   SITE_KEYWORDS,
   SOCIAL,
   organizationJsonLd,
+  safeMetadataBase,
   websiteJsonLd,
 } from "@/lib/seo"
 import "./globals.css"
@@ -29,7 +30,7 @@ const fraunces = Fraunces({
 })
 
 export const metadata: Metadata = {
-  metadataBase: new URL(SITE_URL),
+  metadataBase: safeMetadataBase(),
   title: {
     default: `${SITE_NAME} — ${SITE_TAGLINE}`,
     template: `%s | ${SITE_NAME}`,

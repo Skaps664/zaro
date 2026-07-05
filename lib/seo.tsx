@@ -12,7 +12,29 @@ import type { Metadata } from "next"
  */
 
 const RAW_SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? "https://zarufragrance.com"
-export const SITE_URL = RAW_SITE_URL.replace(/\/+$/, "")
+
+function normalizeSiteUrl(input: string): string {
+  const trimmed = input.trim().replace(/\/+$/, "")
+  if (!trimmed) return "https://zarufragrance.com"
+  // Accept bare hostname like "zarufragrance.com" and default to https.
+  if (!/^https?:\/\//i.test(trimmed)) return `https://${trimmed}`
+  return trimmed
+}
+
+export const SITE_URL = normalizeSiteUrl(RAW_SITE_URL)
+
+/**
+ * Returns a valid URL for `metadataBase` in the root layout. Falls back to
+ * the default site URL if the configured value can't be parsed so the app
+ * never crashes on boot because of a bad env var.
+ */
+export function safeMetadataBase(): URL {
+  try {
+    return new URL(SITE_URL)
+  } catch {
+    return new URL("https://zarufragrance.com")
+  }
+}
 
 export const SITE_NAME = "ZARU Fragrance Hub"
 export const SITE_SHORT_NAME = "ZARU"
@@ -63,6 +85,13 @@ type BuildMetadataInput = {
   keywords?: string[]
   image?: string
   noIndex?: boolean
+  /**
+   * Semantic content type. Next.js's Metadata API only accepts the OpenGraph
+   * base types (`website`, `article`, `book`, `profile`, `music.*`, `video.*`);
+   * `"product"` is *not* one of them (product data is exposed via JSON-LD
+   * instead). We accept `"product"` here as a caller hint and safely map it
+   * to `"website"` on the OpenGraph side.
+   */
   type?: "website" | "article" | "product"
 }
 
@@ -80,11 +109,18 @@ export function buildMetadata({
   noIndex = false,
   type = "website",
 }: BuildMetadataInput): Metadata {
-  const normalizedPath = path.startsWith("/") ? path : `/${path}`
+  const safePath = typeof path === "string" && path.length > 0 ? path : "/"
+  const normalizedPath = safePath.startsWith("/") ? safePath : `/${safePath}`
   const canonical = `${SITE_URL}${normalizedPath}`
   const finalTitle = title ? `${title} | ${SITE_NAME}` : `${SITE_NAME} — ${SITE_TAGLINE}`
   const finalDescription = description ?? SITE_DESCRIPTION
-  const finalImage = image ?? DEFAULT_OG_IMAGE.url
+
+  // Ensure the OG/Twitter image is always an absolute URL that Next.js can parse.
+  const finalImage = toAbsoluteUrl(image) ?? DEFAULT_OG_IMAGE.url
+
+  // Next.js Metadata does not recognise "product" as an OpenGraph type,
+  // so we normalise it to "website". Product schema still ships via JSON-LD.
+  const openGraphType: "website" | "article" = type === "article" ? "article" : "website"
 
   return {
     title: finalTitle,
@@ -99,7 +135,7 @@ export function buildMetadata({
       url: canonical,
       siteName: SITE_NAME,
       locale: SITE_LOCALE,
-      type,
+      type: openGraphType,
       images: [
         {
           url: finalImage,
@@ -139,6 +175,20 @@ export function buildMetadata({
           },
         },
   }
+}
+
+/**
+ * Coerce any value into an absolute HTTPS URL string, or return null if we can't.
+ * Handles: absolute URLs, root-relative paths, bare filenames, empty/null/undefined.
+ */
+function toAbsoluteUrl(input: unknown): string | null {
+  if (typeof input !== "string") return null
+  const trimmed = input.trim()
+  if (trimmed.length === 0) return null
+
+  if (/^https?:\/\//i.test(trimmed)) return trimmed
+  if (trimmed.startsWith("/")) return `${SITE_URL}${trimmed}`
+  return `${SITE_URL}/${trimmed}`
 }
 
 /* -------------------------------------------------------------
@@ -208,10 +258,14 @@ export function productJsonLd(input: {
   currency?: string
   availability?: "InStock" | "OutOfStock" | "PreOrder"
 }) {
-  const images = Array.isArray(input.image) ? input.image : [input.image]
-  const absoluteImages = images.map((src) =>
-    src.startsWith("http") ? src : `${SITE_URL}${src.startsWith("/") ? "" : "/"}${src}`,
-  )
+  const rawImages = Array.isArray(input.image) ? input.image : [input.image]
+  const absoluteImages = rawImages
+    .map((src) => toAbsoluteUrl(src))
+    .filter((src): src is string => Boolean(src))
+
+  const safeAudience = typeof input.audience === "string" && input.audience.length > 0 ? input.audience : undefined
+  const safeCategory = typeof input.category === "string" && input.category.length > 0 ? input.category : undefined
+  const safePrice = typeof input.price === "number" && Number.isFinite(input.price) ? input.price : 0
 
   return {
     "@context": "https://schema.org",
@@ -219,23 +273,25 @@ export function productJsonLd(input: {
     "@id": `${SITE_URL}/products/${input.id}#product`,
     name: input.name,
     description: input.description,
-    image: absoluteImages,
+    ...(absoluteImages.length > 0 ? { image: absoluteImages } : {}),
     brand: {
       "@type": "Brand",
       name: SITE_NAME,
     },
-    category: input.category,
-    audience: input.audience
-      ? { "@type": "PeopleAudience", suggestedGender: input.audience.toLowerCase() }
-      : undefined,
+    ...(safeCategory ? { category: safeCategory } : {}),
+    ...(safeAudience
+      ? { audience: { "@type": "PeopleAudience", suggestedGender: safeAudience.toLowerCase() } }
+      : {}),
     sku: input.id,
     mpn: input.id,
-    ...(input.inspiredBy ? { additionalProperty: [{ "@type": "PropertyValue", name: "Inspired by", value: input.inspiredBy }] } : {}),
+    ...(input.inspiredBy
+      ? { additionalProperty: [{ "@type": "PropertyValue", name: "Inspired by", value: input.inspiredBy }] }
+      : {}),
     offers: {
       "@type": "Offer",
       url: `${SITE_URL}/products/${input.id}`,
       priceCurrency: input.currency ?? "PKR",
-      price: input.price,
+      price: safePrice,
       availability: `https://schema.org/${input.availability ?? "InStock"}`,
       itemCondition: "https://schema.org/NewCondition",
       seller: {
@@ -275,14 +331,24 @@ export function faqJsonLd(items: Array<{ question: string; answer: string }>) {
 }
 
 /**
- * Renders a JSON-LD script tag safely. Use inside a server component.
+ * Renders a JSON-LD script tag safely. Never throws — if serialization fails
+ * for any reason, the component silently renders nothing so it can't break
+ * the whole page.
  */
 export function JsonLd({ data }: { data: unknown }) {
+  let json: string
+  try {
+    json = JSON.stringify(data)
+  } catch (error) {
+    console.error("[JsonLd] Failed to serialize data", error)
+    return null
+  }
+  if (!json) return null
   return (
     <script
       type="application/ld+json"
       // eslint-disable-next-line react/no-danger
-      dangerouslySetInnerHTML={{ __html: JSON.stringify(data) }}
+      dangerouslySetInnerHTML={{ __html: json }}
     />
   )
 }
