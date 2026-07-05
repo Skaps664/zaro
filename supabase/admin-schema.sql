@@ -95,6 +95,8 @@ alter table public.site_settings add column if not exists bundle_first_product_i
 alter table public.site_settings add column if not exists bundle_second_product_id text not null default '';
 alter table public.site_settings add column if not exists bundle_custom_price numeric(10, 2) not null default 0;
 alter table public.site_settings add column if not exists bundle_discount_percentage integer not null default 0;
+alter table public.site_settings add column if not exists hero_single_enabled boolean not null default true;
+alter table public.site_settings add column if not exists bundle_section_enabled boolean not null default true;
 
 insert into storage.buckets (id, name, public)
 values ('zaru-assets', 'zaru-assets', true)

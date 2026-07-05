@@ -40,6 +40,8 @@ type SettingsInput = {
   bundleSecondProductId: string
   bundleCustomPrice: number
   bundleDiscountPercentage: number
+  heroSingleEnabled: boolean
+  bundleSectionEnabled: boolean
 }
 
 const MAX_COMPAT_RETRIES = 24
@@ -83,6 +85,8 @@ function mapToDbPayload(settings: SettingsInput) {
     bundle_second_product_id: settings.bundleSecondProductId,
     bundle_custom_price: settings.bundleCustomPrice,
     bundle_discount_percentage: settings.bundleDiscountPercentage,
+    hero_single_enabled: settings.heroSingleEnabled,
+    bundle_section_enabled: settings.bundleSectionEnabled,
   }
 }
 

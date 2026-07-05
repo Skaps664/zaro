@@ -38,6 +38,8 @@ type SiteSettings = {
   bundleSecondProductId: string
   bundleCustomPrice: number
   bundleDiscountPercentage: number
+  heroSingleEnabled: boolean
+  bundleSectionEnabled: boolean
 }
 
 type ProductRow = {
@@ -141,6 +143,8 @@ const defaultSettings: SiteSettings = {
   bundleSecondProductId: "",
   bundleCustomPrice: 0,
   bundleDiscountPercentage: 0,
+  heroSingleEnabled: true,
+  bundleSectionEnabled: true,
 }
 
 function normalizeVideoReviews(raw: unknown) {
@@ -259,6 +263,12 @@ export async function getSiteSettings(): Promise<SiteSettings> {
       typeof data.bundle_discount_percentage === "number"
         ? data.bundle_discount_percentage
         : defaultSettings.bundleDiscountPercentage,
+    heroSingleEnabled:
+      typeof data.hero_single_enabled === "boolean" ? data.hero_single_enabled : defaultSettings.heroSingleEnabled,
+    bundleSectionEnabled:
+      typeof data.bundle_section_enabled === "boolean"
+        ? data.bundle_section_enabled
+        : defaultSettings.bundleSectionEnabled,
   }
 }
 

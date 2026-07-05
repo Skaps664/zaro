@@ -39,30 +39,36 @@ export default async function Home() {
         title={siteSettings.heroProductsTitle}
         subtitle={siteSettings.heroProductsSubtitle}
       />
-      <HeroProductSection
-        product={heroSingleProduct}
-        eyebrow={siteSettings.heroSingleEyebrow}
-        title={siteSettings.heroSingleTitle}
-        subtitle={siteSettings.heroSingleSubtitle}
-        imageUrl={siteSettings.heroSingleImageUrl}
-        discountPercentage={siteSettings.heroSingleDiscountPercentage}
-      />
+      {siteSettings.heroSingleEnabled && (
+        <HeroProductSection
+          product={heroSingleProduct}
+          eyebrow={siteSettings.heroSingleEyebrow}
+          title={siteSettings.heroSingleTitle}
+          subtitle={siteSettings.heroSingleSubtitle}
+          imageUrl={siteSettings.heroSingleImageUrl}
+          discountPercentage={siteSettings.heroSingleDiscountPercentage}
+        />
+      )}
       
       
-      <BundleProductSection
-        firstProduct={bundleFirstProduct}
-        secondProduct={bundleSecondProduct}
-        eyebrow={siteSettings.bundleSectionEyebrow}
-        title={siteSettings.bundleSectionTitle}
-        subtitle={siteSettings.bundleSectionSubtitle}
-        customPrice={siteSettings.bundleCustomPrice}
-        discountPercentage={siteSettings.bundleDiscountPercentage}
-      />
+      {siteSettings.bundleSectionEnabled && (
+        <BundleProductSection
+          firstProduct={bundleFirstProduct}
+          secondProduct={bundleSecondProduct}
+          eyebrow={siteSettings.bundleSectionEyebrow}
+          title={siteSettings.bundleSectionTitle}
+          subtitle={siteSettings.bundleSectionSubtitle}
+          customPrice={siteSettings.bundleCustomPrice}
+          discountPercentage={siteSettings.bundleDiscountPercentage}
+        />
+      )}
+      {/* Video Reviews section — hidden for now (kept in code for future re-enable)
 <VideoTestimonialsSection
         heading={siteSettings.videoReviewsHeading}
         subheading={siteSettings.videoReviewsSubheading}
         videos={siteSettings.videoReviews}
       />
+      */}
       <TextTestimonialsSection/>
       <ScienceSection />
       <SpotlightSection

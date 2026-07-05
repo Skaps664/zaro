@@ -174,6 +174,8 @@ type SiteSettings = {
   bundle_second_product_id: string
   bundle_custom_price: number
   bundle_discount_percentage: number
+  hero_single_enabled: boolean
+  bundle_section_enabled: boolean
 }
 
 type Order = {
@@ -248,6 +250,8 @@ const defaultSettings: SiteSettings = {
   bundle_second_product_id: "",
   bundle_custom_price: 0,
   bundle_discount_percentage: 0,
+  hero_single_enabled: true,
+  bundle_section_enabled: true,
 }
 
 const defaultProductForm = {
@@ -382,6 +386,8 @@ function SectionCard({
 export function AdminPageContent() {
   const [adminKey, setAdminKey] = useState("")
   const [savedAdminKey, setSavedAdminKey] = useState("")
+  const [isVerifying, setIsVerifying] = useState(false)
+  const [isBooting, setIsBooting] = useState(true)
   const [activeTab, setActiveTab] = useState<AdminTab>("dashboard")
   const [products, setProducts] = useState<AdminProduct[]>([])
   const [settings, setSettings] = useState<SiteSettings>(defaultSettings)
@@ -413,10 +419,30 @@ export function AdminPageContent() {
 
   useEffect(() => {
     const stored = window.localStorage.getItem("zaru_admin_key")
-    if (stored) {
-      setAdminKey(stored)
-      setSavedAdminKey(stored)
+    if (!stored) {
+      setIsBooting(false)
+      return
     }
+
+    // Verify a stored key with the server before granting UI access.
+    void (async () => {
+      try {
+        const res = await fetch("/api/admin/verify", {
+          headers: { "x-admin-key": stored },
+          cache: "no-store",
+        })
+        if (res.ok) {
+          setAdminKey(stored)
+          setSavedAdminKey(stored)
+        } else {
+          window.localStorage.removeItem("zaru_admin_key")
+        }
+      } catch {
+        // Network error — keep the key so user can retry when back online.
+      } finally {
+        setIsBooting(false)
+      }
+    })()
   }, [])
 
   const canAccess = Boolean(savedAdminKey)
@@ -494,6 +520,15 @@ export function AdminPageContent() {
         fetch("/api/admin/orders", { headers: adminHeaders }),
       ])
 
+      // If the key has been rotated or invalidated server-side, drop access.
+      if (productsRes.status === 401 || settingsRes.status === 401 || ordersRes.status === 401) {
+        window.localStorage.removeItem("zaru_admin_key")
+        setSavedAdminKey("")
+        setAdminKey("")
+        toast.error("Session invalid. Please sign in again.")
+        return
+      }
+
       const productsPayload = (await productsRes.json()) as { success: boolean; products?: AdminProduct[]; message?: string }
       const settingsPayload = (await settingsRes.json()) as { success: boolean; settings?: SiteSettings; message?: string }
       const ordersPayload = (await ordersRes.json()) as { success: boolean; orders?: Order[]; message?: string }
@@ -517,13 +552,36 @@ export function AdminPageContent() {
     void loadData()
   }, [savedAdminKey])
 
-  const unlockAdmin = () => {
-    if (!adminKey.trim()) {
+  const unlockAdmin = async () => {
+    const trimmed = adminKey.trim()
+    if (!trimmed) {
       toast.error("Enter admin key")
       return
     }
-    window.localStorage.setItem("zaru_admin_key", adminKey.trim())
-    setSavedAdminKey(adminKey.trim())
+
+    setIsVerifying(true)
+    try {
+      const res = await fetch("/api/admin/verify", {
+        headers: { "x-admin-key": trimmed },
+        cache: "no-store",
+      })
+      if (res.status === 401) {
+        toast.error("Invalid admin key")
+        return
+      }
+      if (!res.ok) {
+        toast.error("Could not verify admin key. Try again.")
+        return
+      }
+
+      window.localStorage.setItem("zaru_admin_key", trimmed)
+      setSavedAdminKey(trimmed)
+      toast.success("Signed in")
+    } catch {
+      toast.error("Network error — could not verify admin key")
+    } finally {
+      setIsVerifying(false)
+    }
   }
 
   const signOut = () => {
@@ -757,6 +815,8 @@ export function AdminPageContent() {
     bundleSecondProductId: settings.bundle_second_product_id,
     bundleCustomPrice: settings.bundle_custom_price,
     bundleDiscountPercentage: settings.bundle_discount_percentage,
+    heroSingleEnabled: settings.hero_single_enabled,
+    bundleSectionEnabled: settings.bundle_section_enabled,
   })
 
   const deleteAllProducts = async () => {
@@ -958,6 +1018,17 @@ export function AdminPageContent() {
     }
   }
 
+  if (isBooting) {
+    return (
+      <section className="min-h-screen flex items-center justify-center bg-muted/30 px-6 py-24">
+        <div className="flex items-center gap-3 text-muted-foreground">
+          <RefreshCw className="h-4 w-4 animate-spin" />
+          <span className="text-sm">Verifying session…</span>
+        </div>
+      </section>
+    )
+  }
+
   if (!canAccess) {
     return (
       <section className="min-h-screen flex items-center justify-center bg-muted/30 px-6 py-24">
@@ -978,15 +1049,16 @@ export function AdminPageContent() {
                 value={adminKey}
                 onChange={(event) => setAdminKey(event.target.value)}
                 onKeyDown={(event) => {
-                  if (event.key === "Enter") unlockAdmin()
+                  if (event.key === "Enter" && !isVerifying) void unlockAdmin()
                 }}
                 placeholder="Enter admin key"
                 className={inputCls}
                 autoFocus
+                disabled={isVerifying}
               />
             </Field>
-            <Button className="w-full" onClick={unlockAdmin}>
-              Sign in to dashboard
+            <Button className="w-full" onClick={() => void unlockAdmin()} disabled={isVerifying}>
+              {isVerifying ? "Verifying…" : "Sign in to dashboard"}
             </Button>
           </div>
         </div>
@@ -2092,6 +2164,7 @@ function HomePageView({
         </div>
       </SectionCard>
 
+      {/* Video Reviews section — hidden for now (kept in code for future re-enable)
       <SectionCard title="Video Reviews" description="Customer video testimonials shown on home.">
         <div className="grid gap-3 sm:grid-cols-2">
           <Field label="Heading">
@@ -2153,6 +2226,7 @@ function HomePageView({
           ))}
         </div>
       </SectionCard>
+      */}
 
       <SectionCard title="Spotlight" description="Story section on the home page.">
         <div className="rounded-lg border border-border/60 bg-background p-4 space-y-3">
@@ -2292,7 +2366,25 @@ function SaleBundleView({
 }) {
   return (
     <div className="space-y-6">
-      <SectionCard title="Sale Product Section" description="Featured single-product sale block.">
+      <SectionCard
+        title="Sale Product Section"
+        description="Featured single-product sale block."
+        actions={
+          <label className="flex cursor-pointer items-center gap-2 rounded-full border border-border/70 bg-background px-3 py-1.5 text-xs">
+            <input
+              type="checkbox"
+              className="h-3.5 w-3.5"
+              checked={settings.hero_single_enabled}
+              onChange={(event) =>
+                setSettings((prev) => ({ ...prev, hero_single_enabled: event.target.checked }))
+              }
+            />
+            <span className={settings.hero_single_enabled ? "text-emerald-700 font-medium" : "text-muted-foreground"}>
+              {settings.hero_single_enabled ? "Enabled on site" : "Disabled"}
+            </span>
+          </label>
+        }
+      >
         <div className="grid gap-3 sm:grid-cols-2">
           <Field label="Eyebrow">
             <input
@@ -2373,7 +2465,25 @@ function SaleBundleView({
         </div>
       </SectionCard>
 
-      <SectionCard title="Bundle Section" description="Pair two products at a bundle price.">
+      <SectionCard
+        title="Bundle Section"
+        description="Pair two products at a bundle price."
+        actions={
+          <label className="flex cursor-pointer items-center gap-2 rounded-full border border-border/70 bg-background px-3 py-1.5 text-xs">
+            <input
+              type="checkbox"
+              className="h-3.5 w-3.5"
+              checked={settings.bundle_section_enabled}
+              onChange={(event) =>
+                setSettings((prev) => ({ ...prev, bundle_section_enabled: event.target.checked }))
+              }
+            />
+            <span className={settings.bundle_section_enabled ? "text-emerald-700 font-medium" : "text-muted-foreground"}>
+              {settings.bundle_section_enabled ? "Enabled on site" : "Disabled"}
+            </span>
+          </label>
+        }
+      >
         <div className="grid gap-3 sm:grid-cols-2">
           <Field label="Eyebrow">
             <input
