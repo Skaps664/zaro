@@ -116,13 +116,15 @@ function buildOrderMessage(
   orderId: string,
   payload: CheckoutBody,
   subtotalAmount: number,
-  discountAmount: number,
+  _discountAmount: number,
   shippingAmount: number,
   payableAmount: number,
 ) {
   const lines = payload.items
     .map((item) => `${item.name} x${item.quantity} = PKR ${item.lineTotal}`)
     .join(" | ")
+
+  const paymentLabel = payload.payment.type === "cod" ? "Cash on Delivery" : "Advance Payment"
 
   return [
     `Order ID: ${orderId}`,
@@ -131,18 +133,12 @@ function buildOrderMessage(
     `City: ${payload.customer.city}`,
     `Address: ${payload.customer.address}`,
     `Email: ${payload.customer.email ?? "N/A"}`,
-    `Payment Type: ${payload.payment.type === "cod" ? "Cash on Delivery" : "Advance Payment"}`,
-    `Payment Method: ${payload.payment.method}`,
-    `Payment Ref: ${payload.payment.reference ?? "N/A"}`,
+    `Payment: ${paymentLabel}`,
     `Total Items: ${payload.totalItems}`,
     `Subtotal: PKR ${subtotalAmount}`,
-    `Discount: PKR ${discountAmount}`,
     `Shipping: PKR ${shippingAmount}`,
     `Payable Amount: PKR ${payableAmount}`,
     `Items: ${lines}`,
-    `Notes: ${payload.notes ?? "N/A"}`,
-    `WhatsApp: ${payload.whatsapp ?? "N/A"}`,
-    `Created At: ${new Date().toISOString()}`,
   ].join("\n")
 }
 

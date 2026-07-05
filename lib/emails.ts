@@ -124,6 +124,82 @@ function renderItemRows(items: OrderItem[] = []) {
     .join("")
 }
 
+function renderItemsTable(items: OrderItem[] = []) {
+  return `
+    <table style="width:100%;border-collapse:collapse;font-size:14px;margin-top:8px;">
+      <thead>
+        <tr>
+          <th style="text-align:left;padding:8px;border-bottom:1px solid #ddd;">Item</th>
+          <th style="text-align:center;padding:8px;border-bottom:1px solid #ddd;">Qty</th>
+          <th style="text-align:right;padding:8px;border-bottom:1px solid #ddd;">Total</th>
+        </tr>
+      </thead>
+      <tbody>${renderItemRows(items)}</tbody>
+    </table>`
+}
+
+function renderPriceSummary(order: OrderShape) {
+  const shippingAmount = Math.max(
+    0,
+    Number(order.payable_amount) - Number(order.subtotal_amount) + Number(order.discount_amount),
+  )
+  return `
+    <table style="width:100%;border-collapse:collapse;font-size:14px;margin-top:12px;">
+      <tr>
+        <td style="padding:6px 8px;color:#666;">Subtotal</td>
+        <td style="padding:6px 8px;text-align:right;">${formatPKR(order.subtotal_amount)}</td>
+      </tr>
+      ${
+        order.discount_amount > 0
+          ? `<tr>
+              <td style="padding:6px 8px;color:#666;">Discount</td>
+              <td style="padding:6px 8px;text-align:right;">- ${formatPKR(order.discount_amount)}</td>
+            </tr>`
+          : ""
+      }
+      ${
+        shippingAmount > 0
+          ? `<tr>
+              <td style="padding:6px 8px;color:#666;">Shipping</td>
+              <td style="padding:6px 8px;text-align:right;">${formatPKR(shippingAmount)}</td>
+            </tr>`
+          : ""
+      }
+      <tr>
+        <td style="padding:8px;font-weight:600;font-size:15px;border-top:2px solid #d4c39a;color:#1a1a1a;">Total payable</td>
+        <td style="padding:8px;text-align:right;font-weight:700;font-size:16px;border-top:2px solid #d4c39a;color:#8a6d3b;">${formatPKR(order.payable_amount)}</td>
+      </tr>
+    </table>`
+}
+
+function renderCallout(tone: "gold" | "amber" | "emerald" | "rose", heading: string, message: string) {
+  const palette = {
+    gold: { bg: "#faf5e8", border: "#d4b464", accent: "#8a6d3b" },
+    amber: { bg: "#fff7ed", border: "#f59e0b", accent: "#92400e" },
+    emerald: { bg: "#ecfdf5", border: "#34d399", accent: "#065f46" },
+    rose: { bg: "#fff1f2", border: "#fb7185", accent: "#9f1239" },
+  }[tone]
+  return `
+    <div style="margin:20px 0;padding:16px 18px;background:${palette.bg};border-left:4px solid ${palette.border};border-radius:8px;">
+      <p style="margin:0 0 4px 0;font-size:11px;text-transform:uppercase;letter-spacing:1.5px;color:${palette.accent};font-weight:600;">
+        ${escapeHtml(heading)}
+      </p>
+      <p style="margin:0;font-size:15px;line-height:1.5;color:${palette.accent};font-weight:600;">
+        ${escapeHtml(message)}
+      </p>
+    </div>`
+}
+
+function renderShippingAddress(order: OrderShape) {
+  return `
+    <div style="margin-top:20px;padding-top:16px;border-top:1px solid #eee;font-size:13px;color:#444;">
+      <p style="margin:0 0 4px 0;"><strong>Shipping to</strong></p>
+      <p style="margin:0;">${escapeHtml(order.customer_name)}</p>
+      <p style="margin:0;">${escapeHtml(order.customer_phone)}</p>
+      <p style="margin:0;">${escapeHtml(order.customer_address)}, ${escapeHtml(order.customer_city)}</p>
+    </div>`
+}
+
 function wrapShell(title: string, bodyHtml: string) {
   return `
   <div style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;max-width:600px;margin:0 auto;padding:24px;color:#1a1a1a;background:#faf7f2;">
@@ -180,52 +256,25 @@ export function renderAdminOrderEmail(orderId: string, order: OrderShape) {
  * Sent when an order is first placed (status = pending).
  */
 export function renderCustomerOrderConfirmationEmail(orderId: string, order: OrderShape) {
-  const rows = renderItemRows(order.items)
+  const firstName = escapeHtml(order.customer_name.split(" ")[0] || "there")
   const body = `
-    <p style="margin:0 0 12px 0;">Hi ${escapeHtml(order.customer_name.split(" ")[0] || "there")}, thank you so much for your order!</p>
-    <p style="margin:0 0 12px 0;">We’ve received it and our team will reach out to you shortly to confirm the details. In the meantime, here’s a summary of what you ordered.</p>
+    <p style="margin:0 0 12px 0;font-size:15px;">Hi ${firstName}, thank you so much for your order! 🌿</p>
+    <p style="margin:0 0 8px 0;">We've received your order and it's now in our queue. Here's a full summary of what you ordered and the total amount.</p>
+
+    ${renderCallout(
+      "gold",
+      "What happens next",
+      "Our team will contact you shortly on WhatsApp or phone to confirm your order details before we prepare it for dispatch.",
+    )}
 
     <div style="background:#faf7f2;border:1px solid #ece5d5;border-radius:8px;padding:12px 16px;margin:16px 0;">
       <p style="margin:0;font-size:12px;text-transform:uppercase;letter-spacing:1px;color:#8a6d3b;">Order</p>
       <p style="margin:2px 0 0 0;font-family:Georgia,serif;font-size:20px;">#${escapeHtml(orderId)}</p>
     </div>
 
-    <table style="width:100%;border-collapse:collapse;font-size:14px;margin-top:8px;">
-      <thead>
-        <tr>
-          <th style="text-align:left;padding:8px;border-bottom:1px solid #ddd;">Item</th>
-          <th style="text-align:center;padding:8px;border-bottom:1px solid #ddd;">Qty</th>
-          <th style="text-align:right;padding:8px;border-bottom:1px solid #ddd;">Total</th>
-        </tr>
-      </thead>
-      <tbody>${rows}</tbody>
-    </table>
-
-    <table style="width:100%;border-collapse:collapse;font-size:14px;margin-top:12px;">
-      <tr>
-        <td style="padding:6px 8px;color:#666;">Subtotal</td>
-        <td style="padding:6px 8px;text-align:right;">${formatPKR(order.subtotal_amount)}</td>
-      </tr>
-      ${
-        order.discount_amount > 0
-          ? `<tr>
-              <td style="padding:6px 8px;color:#666;">Discount</td>
-              <td style="padding:6px 8px;text-align:right;">- ${formatPKR(order.discount_amount)}</td>
-            </tr>`
-          : ""
-      }
-      <tr>
-        <td style="padding:6px 8px;font-weight:600;border-top:1px solid #ddd;">Total payable</td>
-        <td style="padding:6px 8px;text-align:right;font-weight:600;border-top:1px solid #ddd;">${formatPKR(order.payable_amount)}</td>
-      </tr>
-    </table>
-
-    <div style="margin-top:20px;padding-top:16px;border-top:1px solid #eee;font-size:13px;color:#444;">
-      <p style="margin:0 0 4px 0;"><strong>Shipping to</strong></p>
-      <p style="margin:0;">${escapeHtml(order.customer_name)}</p>
-      <p style="margin:0;">${escapeHtml(order.customer_phone)}</p>
-      <p style="margin:0;">${escapeHtml(order.customer_address)}, ${escapeHtml(order.customer_city)}</p>
-    </div>
+    ${renderItemsTable(order.items)}
+    ${renderPriceSummary(order)}
+    ${renderShippingAddress(order)}
 
     <p style="margin-top:16px;font-size:13px;color:#666;">
       You can check the status of your order any time from the <em>My Orders</em> page on our website using this email or your phone number.
@@ -238,24 +287,64 @@ export function renderCustomerOrderConfirmationEmail(orderId: string, order: Ord
  * Customer email when order status changes.
  */
 const STATUS_HEADLINE: Record<string, string> = {
-  pending: "We’ve received your order",
+  pending: "We've received your order",
   confirmed: "Your order has been confirmed",
   shipped: "Your order is on its way",
   delivered: "Your order has been delivered",
   cancelled: "Your order has been cancelled",
 }
 
-const STATUS_MESSAGE: Record<string, string> = {
-  pending: "Thanks for your order! We’ve received it and will reach out to you shortly to confirm the details.",
-  confirmed: "Great news — we’ve confirmed your order and it’s now being prepared for dispatch. We’ll let you know as soon as it ships.",
-  shipped: "Your order has been dispatched and is on its way to you. You can follow it using the tracking details below.",
-  delivered: "Your order has been delivered. We really hope you love your fragrance — tag us if you share it!",
-  cancelled: "Your order has been cancelled. If this was unexpected or you’d like help placing a new order, just reply to this email and we’ll take care of it.",
+const STATUS_INTRO: Record<string, string> = {
+  pending: "Thanks for your order! We've received it and will reach out to you shortly to confirm the details.",
+  confirmed:
+    "Great news — we've confirmed your order and it's now being prepared for dispatch. We'll notify you the moment it ships.",
+  shipped:
+    "Your order has been dispatched and is on its way to you. You can track it using the details below.",
+  delivered: "Your order has been delivered. We really hope you love your fragrance!",
+  cancelled: "Your order has been cancelled. If this was unexpected, just reply to this email and we'll take care of it.",
+}
+
+function renderStatusCallout(status: string) {
+  switch (status) {
+    case "pending":
+      return renderCallout(
+        "gold",
+        "What happens next",
+        "Our team will contact you shortly on WhatsApp or phone to confirm your order before we prepare it for dispatch.",
+      )
+    case "confirmed":
+      return renderCallout(
+        "gold",
+        "Order confirmed",
+        "We've locked in your order and started preparing it. You'll receive another email as soon as it's dispatched.",
+      )
+    case "shipped":
+      return renderCallout(
+        "amber",
+        "Delivery in 3–5 business days",
+        "Please have your payment ready — your order will arrive in 3 to 5 business days. Use the tracking details below to follow it.",
+      )
+    case "delivered":
+      return renderCallout(
+        "emerald",
+        "Thanks for choosing ZARU 💛",
+        "It would mean a lot if you could leave us a review or share how the scent worked out for you — your feedback truly helps our small brand grow.",
+      )
+    case "cancelled":
+      return renderCallout(
+        "rose",
+        "Order cancelled",
+        "If this cancellation was a mistake or you'd like help placing a new order, reply to this email and we'll sort it out for you.",
+      )
+    default:
+      return ""
+  }
 }
 
 export function renderCustomerStatusUpdateEmail(orderId: string, order: OrderShape) {
+  const firstName = escapeHtml(order.customer_name.split(" ")[0] || "there")
   const headline = STATUS_HEADLINE[order.status] ?? `Order update`
-  const message = STATUS_MESSAGE[order.status] ?? `Your order status is now: ${order.status}`
+  const intro = STATUS_INTRO[order.status] ?? `Your order status is now: ${order.status}`
 
   const trackingBlock = order.tracking_info
     ? `
@@ -271,8 +360,10 @@ export function renderCustomerStatusUpdateEmail(orderId: string, order: OrderSha
     : ""
 
   const body = `
-    <p style="margin:0 0 12px 0;">Hi ${escapeHtml(order.customer_name.split(" ")[0] || "there")},</p>
-    <p style="margin:0 0 16px 0;">${escapeHtml(message)}</p>
+    <p style="margin:0 0 12px 0;font-size:15px;">Hi ${firstName},</p>
+    <p style="margin:0 0 8px 0;">${escapeHtml(intro)}</p>
+
+    ${renderStatusCallout(order.status)}
 
     <div style="background:#faf7f2;border:1px solid #ece5d5;border-radius:8px;padding:12px 16px;margin:16px 0;">
       <p style="margin:0;font-size:12px;text-transform:uppercase;letter-spacing:1px;color:#8a6d3b;">Order</p>
@@ -281,6 +372,10 @@ export function renderCustomerStatusUpdateEmail(orderId: string, order: OrderSha
     </div>
 
     ${trackingBlock}
+
+    ${renderItemsTable(order.items)}
+    ${renderPriceSummary(order)}
+    ${renderShippingAddress(order)}
 
     <p style="margin-top:20px;font-size:13px;color:#666;">
       Track your order any time from the <em>My Orders</em> page on our website — just enter this email or your phone number.
