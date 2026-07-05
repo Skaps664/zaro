@@ -32,7 +32,8 @@ export function Header() {
             <div className="flex items-center gap-2 pl-4 border-l border-border/60">
               <Link
                 href="/account"
-                aria-label="Account"
+                aria-label="My Orders"
+                title="My Orders"
                 className="w-10 h-10 rounded-full border border-border/60 hover:bg-muted/60 transition-colors flex items-center justify-center"
               >
                 <User className="w-5 h-5" />
@@ -75,7 +76,7 @@ export function Header() {
                 onClick={() => setIsOpen(false)}
               >
                 <User className="w-5 h-5" />
-                Account
+                My Orders
               </Link>
               <CartButton
                 label="Open cart"
