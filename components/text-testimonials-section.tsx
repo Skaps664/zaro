@@ -6,36 +6,51 @@ import { ScrollBlurText } from "./scroll-blur-text"
 const testimonials = [
   {
     quote:
-      "Victory Crown smells exactly like Aventus. The longevity is incredible-it lasted 14 hours on my skin. Worth every penny.",
-    author: "Amir K.",
-    role: "Verified buyer",
-    avatar: "/placeholder.svg?height=80&width=80",
+      "Yaar honestly I wasn't expecting much at this price but Victory Crown ne dil jeet liya. Aventus vibe is there, projection strong hai aur poori shift chalti hai easily. Paisa wasool.",
+    author: "Ahmed Raza",
+    role: "Karachi",
   },
   {
     quote:
-      "ZARU delivered what they promised. Wild Storm has the same fresh, spicy character as the designer version, but at half the price.",
-    author: "Sofia M.",
-    role: "Verified buyer",
-    avatar: "/placeholder.svg?height=80&width=80",
+      "Ordered Wild Storm for my husband, he loved it. Smells fresh and mardana, ghar mein sab log poochte hain kaunsa perfume laga hai. Delivery Peshawar tak 3 din mein aa gayi.",
+    author: "Areeba Khan",
+    role: "Peshawar",
   },
   {
     quote:
-      "As a fragrance enthusiast, I was skeptical. But Blue Legacy is genuinely impressive. The accuracy and performance are outstanding.",
-    author: "James T.",
-    role: "Verified buyer",
-    avatar: "/placeholder.svg?height=80&width=80",
+      "I've tried a few local brands before and honestly bohot disappointment thi. ZARU different hai — proper long lasting, sillage bhi decent. Blue Legacy is my daily driver ab.",
+    author: "Bilal Ahmed",
+    role: "Lahore",
   },
   {
-    quote: "Finally, luxury fragrances at prices that make sense. ZARU is redefining what premium means.",
-    author: "Priya S.",
-    role: "Verified buyer",
-    avatar: "/placeholder.svg?height=80&width=80",
+    quote:
+      "Received the parcel today, packaging kaafi premium lagi. Applied it and mashallah scent bilkul original jaisi hai. Recommended for anyone who wants a designer feel bina jeb khali kiye.",
+    author: "Hamza Iqbal",
+    role: "Islamabad",
   },
   {
-    quote: "The quality is insane. I get compliments all day wearing Victory Crown. Highly recommend ZARU.",
-    author: "Hassan A.",
-    role: "Verified buyer",
-    avatar: "/placeholder.svg?height=80&width=80",
+    quote:
+      "Meri wife ke liye order kiya tha as a gift. She said itni khushboo achi hai jitni Dubai se laayi hui bottle ki thi. Trust build ho gaya hai ZARU pe honestly.",
+    author: "Usman Tariq",
+    role: "Rawalpindi",
+  },
+  {
+    quote:
+      "Bhai review dena zaroori tha. COD pe order kiya, on time deliver hua, bottle bhi solid hai. Office mein log ab poochte hain kaunsa scent hai — proud moment lol.",
+    author: "Fahad Malik",
+    role: "Faisalabad",
+  },
+  {
+    quote:
+      "Was a bit hesitant kyunke online se perfume order karna risky lagta hai, lekin support team ne WhatsApp pe properly guide kiya. Fragrance is legit, longevity 8-10 hours easy.",
+    author: "Zainab Siddiqui",
+    role: "Multan",
+  },
+  {
+    quote:
+      "Honestly the price to quality ratio is unmatched. Maine Chanel aur Dior dono use kiye hain, aur ZARU ki quality ussi tier ki feel hoti hai. Kudos to the team.",
+    author: "Danish Shah",
+    role: "Karachi",
   },
 ]
 
@@ -122,16 +137,9 @@ export function TextTestimonialsSection() {
                 "{testimonial.quote}"
               </blockquote>
 
-              <div className="flex items-center gap-3 pt-4 border-t border-border/30">
-                <img
-                  src={testimonial.avatar || "/placeholder.svg"}
-                  alt={testimonial.author}
-                  className="w-12 h-12 rounded-full object-cover"
-                />
-                <div>
-                  <div className="font-medium text-sm text-foreground">{testimonial.author}</div>
-                  <div className="text-xs text-muted-foreground">{testimonial.role}</div>
-                </div>
+              <div className="pt-4 border-t border-border/30">
+                <div className="font-medium text-sm text-foreground">{testimonial.author}</div>
+                <div className="text-xs text-muted-foreground mt-0.5">Verified buyer · {testimonial.role}</div>
               </div>
             </div>
           ))}
